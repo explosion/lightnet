@@ -467,7 +467,7 @@ void visualize_network(network *net)
     int i;
     char buff[256];
     for(i = 0; i < net->n; ++i){
-        sprintf(buff, "Layer %d", i);
+        //sprintf(buff, "Layer %d", i);
         layer l = net->layers[i];
         if(l.type == CONVOLUTIONAL){
             prev = visualize_convolutional_layer(l, buff, prev);
@@ -622,10 +622,10 @@ void compare_networks(network *n1, network *n2, data test)
             else ++a;
         }
     }
-    printf("%5d %5d\n%5d %5d\n", a, b, c, d);
+    //printf("%5d %5d\n%5d %5d\n", a, b, c, d);
     float num = pow((abs(b - c) - 1.), 2.);
     float den = b + c;
-    printf("%f\n", num/den); 
+    //printf("%f\n", num/den); 
 }
 
 float network_accuracy(network *net, data d)

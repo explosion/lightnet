@@ -321,7 +321,7 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     l.workspace_size = get_workspace_size(l);
     l.activation = activation;
 
-    fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", n, size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c);
+    //fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", n, size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c);
 
     return l;
 }
@@ -598,7 +598,7 @@ image *visualize_convolutional_layer(convolutional_layer l, char *window, image 
     image delta = get_convolutional_image(l);
     image dc = collapse_image_layers(delta, 1);
     char buff[256];
-    sprintf(buff, "%s: Output", window);
+    //sprintf(buff, "%s: Output", window);
     //show_image(dc, buff);
     //save_image(dc, buff);
     free_image(dc);

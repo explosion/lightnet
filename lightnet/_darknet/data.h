@@ -43,6 +43,8 @@ void normalize_data_rows(data d);
 void scale_data_rows(data d, float s);
 void translate_data_rows(data d, float s);
 void randomize_data(data d);
+void randomize_boxes(box_label *b, int n);
+void correct_boxes(box_label *boxes, int n, float dx, float dy, float sx, float sy, int flip);
 data *split_data(data d, int part, int total);
 data concat_datas(data *d, int n);
 void fill_truth(char *path, char **labels, int k, float *truth);

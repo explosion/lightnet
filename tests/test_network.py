@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from lightnet import Network
+from lightnet import Network, Image
 
 def test_init():
     nn = Network()
@@ -9,6 +9,7 @@ def test_load():
 
 def test_detect():
     net = Network.load("tiny-yolo")
-    r = net.detect("example-images/dog.jpg")
+    image = Image.load_color("example-images/dog.jpg")
+    r = net(image)
     print(r)
  

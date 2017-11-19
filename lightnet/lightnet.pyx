@@ -1,6 +1,6 @@
 # cython: infer_types=True
 from __future__ import print_function
-from libc.stdlib cimport calloc, free
+from libc.stdlib cimport calloc, free, rand
 import shutil
 import tempfile
 import numpy
@@ -11,6 +11,66 @@ try:
     unicode
 except NameError:
     unicode = str
+
+cdef extern from "_darknet/utils.h" nogil:
+    float rand_uniform(float min, float max)
+
+
+cdef extern from "_darknet/image.h" nogil:
+    void place_image(image im, int w, int h, int dx, int dy, image canvas)
+
+cdef extern from "_darknet/data.h" nogil:
+    void fill_truth_detection(char *path, int num_boxes, float *truth,
+                              int classes, int flip,
+                              float dx, float dy, float sx, float sy)
+
+
+cdef data load_data_detection(int n, char **paths,
+        int m, int w, int h, int boxes, int classes,
+        float jitter, float hue, float saturation, float exposure) nogil:
+    cdef data d
+    d.shallow = 0
+
+    d.X.rows = n
+    d.X.vals = <float**>calloc(d.X.rows, sizeof(float*))
+    d.X.cols = h*w*3
+
+    d.y = make_matrix(n, 5*boxes)
+    cdef float dw, dh, nw, nh, dx, dy
+    for i in range(n):
+        orig = load_image_color(paths[i], 0, 0)
+        sized = make_image(w, h, orig.c)
+        fill_image(sized, .5)
+
+        dw = jitter * orig.w
+        dh = jitter * orig.h
+
+        new_ar = (orig.w + rand_uniform(-dw, dw)) / (orig.h + rand_uniform(-dh, dh))
+        scale = rand_uniform(.25, 2)
+
+        if new_ar < 1:
+            nh = scale * h
+            nw = nh * new_ar
+        else:
+            nw = scale * w
+            nh = nw / new_ar
+
+        dx = rand_uniform(0, w - nw)
+        dy = rand_uniform(0, h - nh)
+
+        place_image(orig, <int>nw, <int>nh, <int>dx, <int>dy, sized)
+
+        random_distort_image(sized, hue, saturation, exposure)
+
+        flip = rand() % 2
+        if flip:
+            flip_image(sized)
+        d.X.vals[i] = sized.data
+
+        fill_truth_detection(paths[i], boxes, d.y.vals[i], classes,
+                             flip, -dx/w, -dy/h, nw/w, nh/h)
+        free_image(orig)
+    return d
 
 
 cdef class Image:
@@ -48,6 +108,21 @@ cdef class Image:
     def __dealloc__(self):
         free_image(self.c)
 
+
+cdef class DetectionData:
+    cdef data c
+
+    def __init__(self, Network net):
+        # I *think* the data from the load_args struct here gets taken over
+        # by the data returned by load_data_detection. That's why we don't
+        # have to free it.
+        cdef load_args a = get_base_args(net.c)
+        self.c = load_data_detection(a.n, a.paths,
+            a.m, a.w, a.h, a.num_boxes, a.classes, a.jitter, a.hue,
+            a.saturation, a.exposure)
+
+    def __dealloc__(self):
+        free_data(self.c)
 
 cdef class Metadata:
     cdef metadata c
@@ -114,6 +189,35 @@ cdef class Network:
             float thresh=.5, float hier_thresh=.5, float nms=.45):
         return self.detect(loc, thresh, hier_thresh, nms)
 
+    #def update(self, images, labels):
+    #    load_args args = {0};
+    #    args.w = net->w;
+    #    args.h = net->h;
+    #    args.paths = paths;
+    #    args.n = imgs;
+    #    args.m = plist->size;
+    #    args.classes = classes;
+    #    args.jitter = jitter;
+    #    args.num_boxes = side;
+    #    args.d = &buffer;
+    #    args.type = REGION_DATA;
+
+    #    args.angle = net->angle;
+    #    args.exposure = net->exposure;
+    #    args.saturation = net->saturation;
+    #    args.hue = net->hue;
+    #    
+    #    args.d = &data
+    #    args.type = REGION_DATA;
+    #    args.angle = net->angle;
+    #    args.exposure = net->exposure;
+    #    args.saturation = net->saturation;
+    #    args.hue = net->hue;
+
+    #    pthread_t load_thread = load_data_in_thread(args);
+    #    data = load_data_detection(len(images), paths, m, w, boxes, classes, jitter, hue, saturation, exposure)
+    #    loss = train_network(self.c, train)
+        
     def detect(self, loc,
             float thresh=.5, float hier_thresh=.5, float nms=.45):
         cdef Image im = Image.load_color(loc, 0, 0)

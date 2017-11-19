@@ -23,18 +23,22 @@ cdef class Image:
         return self
 
     @classmethod
-    def load(cls, bytes loc, int w, int h, int c):
-        if not Path(loc).exists():
-            raise IOError("Image not found: %s" % loc)
+    def load(cls, path, int w, int h, int c):
+        path = Path(path)
+        if not path.exists():
+            raise IOError("Image not found: %s" % path)
         cdef Image self = Image.__new__(cls)
+        cdef bytes loc = unicode(path.resolve()).encode('utf8')
         self.c = load_image(<char*>loc, w, h, c)
         return self
     
     @classmethod
-    def load_color(cls, bytes loc, int w, int h):
-        if not Path(loc).exists():
-            raise IOError("Color image not found: %s" % loc)
+    def load_color(cls, path, int w, int h):
+        path = Path(path)
+        if not path.exists():
+            raise IOError("Color image not found: %s" % path)
         cdef Image self = Image.__new__(cls)
+        cdef bytes loc = unicode(path.resolve()).encode('utf8')
         self.c = load_image_color(<char*>loc, w, h)
         return self
 
@@ -46,8 +50,13 @@ cdef class Metadata:
     cdef metadata c
 
     def __init__(self, path):
-        if not Path(path).exists():
+        path = Path(path)
+        if not path.exists():
             raise IOError("Metadata file not found: %s" % path)
+        with path.open('r', encoding='utf8') as file_:
+            text = file_.read().replace('$HERE', str(path.parent.resolve()))
+        with path.open('w', encoding='utf8') as file_:
+            file_.write(text)
         cdef bytes loc = unicode(path.resolve()).encode('utf8')
         self.c = get_metadata(<char*>loc)
 
@@ -70,7 +79,7 @@ cdef class Network:
         self.meta = Metadata(path)
 
     @classmethod
-    def load(cls, bytes name, *, path=None, int clear=0):
+    def load(cls, name, *, path=None, int clear=0):
         if path is None:
             path = Path(__file__).parent / 'data'
         path = Path(path)
@@ -90,11 +99,11 @@ cdef class Network:
         self.load_meta(path / 'coco.data')
         return self
 
-    def __call__(self, bytes loc, 
+    def __call__(self, loc, 
             float thresh=.5, float hier_thresh=.5, float nms=.45):
         return self.detect(loc, thresh, hier_thresh, nms)
 
-    def detect(self, bytes loc,
+    def detect(self, loc,
             float thresh=.5, float hier_thresh=.5, float nms=.45):
         cdef Image im = Image.load_color(loc, 0, 0)
         cdef box* boxes = make_boxes(self.c)

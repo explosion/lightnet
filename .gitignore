@@ -1,8 +1,4 @@
-# spaCy
-spacy/data/
-corpora/
-/models/
-keys/
+*.weights
 
 # Website
 website/www/

@@ -56,6 +56,7 @@ c_files = get_c_sources(os.path.join(PWD, 'lightnet', '_darknet'))
 
 setup(
     setup_requires=['numpy'],
+    install_requires=['numpy', 'plac', 'requests', 'pathlib'],
     ext_modules=[
         Extension('lightnet.lightnet', ['lightnet/lightnet.c']),
     ],

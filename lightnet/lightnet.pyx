@@ -1,7 +1,6 @@
 # cython: infer_types=True
 from __future__ import print_function
 from libc.stdlib cimport calloc, free
-from cymem.cymem cimport Pool
 import numpy
 from pathlib import Path
 

@@ -148,7 +148,11 @@ void gemm_tt(int M, int N, int K, float ALPHA,
 }
 
 #ifdef CBLAS
+#ifdef __APPLE__
+#include <Accelerate/Accelerate.h>
+#else
 #include <cblas.h>
+#endif
 void gemm_cblas(int TA, int TB, int M, int N, int K, float ALPHA, 
         float *A, int lda, 
         float *B, int ldb,

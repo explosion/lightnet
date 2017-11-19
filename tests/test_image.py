@@ -1,4 +1,4 @@
-from lightnet import Image
+from lightnet.lightnet import Image
 
 def test_make_image():
     img = Image(10, 10, 10)

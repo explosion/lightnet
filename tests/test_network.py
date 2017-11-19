@@ -5,10 +5,10 @@ def test_init():
     nn = Network()
 
 def test_load():
-    net = Network.load(b"tiny-yolo")
+    net = Network.load("tiny-yolo")
 
 def test_detect():
-    net = Network.load(b"tiny-yolo")
-    r = net.detect(b"example-images/dog.jpg")
+    net = Network.load("tiny-yolo")
+    r = net.detect("example-images/dog.jpg")
     print(r)
  

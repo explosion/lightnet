@@ -1,4 +1,4 @@
-from .lightnet import Network
+from .lightnet import Network, Image
 
 def load(name):
     return Network.load(name)

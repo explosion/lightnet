@@ -17,7 +17,7 @@ model_paths = {
     model=("model to download, shortcut or name)", "positional", None, str),
     direct=("force direct download. Needs model name with version and won't "
             "perform compatibility check", "flag", "d", bool))
-def download(cmd, model):
+def download(cmd, model, direct=False):
     """
     Download model from default download path. Models: tiny-yolo, yolo, yolo2
     """
@@ -25,8 +25,7 @@ def download(cmd, model):
         path = model
     else:
         path = model_paths[model]
-    dl = download_model(path)
-    r = requests.get(url)
+    r = requests.get(path)
     if r.status_code != 200:
         msg = ("Couldn't fetch %s. Please find a model for your spaCy "
                "installation (v%s), and download it manually.")

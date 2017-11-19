@@ -1,8 +1,8 @@
 classes= 80
-train  = /home/matt/repos/cython-darknet/_src/data/coco/trainvalno5k.txt
+train  = ../_src/data/coco/trainvalno5k.txt
 #valid  = coco_testdev
-valid = /home/matt/repos/cython-darknet/_src/data/coco_val_5k.list
-names = /home/matt/repos/cython-darknet/_src/data/coco.names
+valid = ../_src/data/coco_val_5k.list
+names = coco.names
 backup = /tmp/darknet-backup/
 eval=coco
 

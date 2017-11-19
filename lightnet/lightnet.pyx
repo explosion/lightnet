@@ -90,6 +90,10 @@ cdef class Network:
         self.load_meta(path / 'coco.data')
         return self
 
+    def __call__(self, bytes loc, 
+            float thresh=.5, float hier_thresh=.5, float nms=.45):
+        return self.detect(loc, thresh, hier_thresh, nms)
+
     def detect(self, bytes loc,
             float thresh=.5, float hier_thresh=.5, float nms=.45):
         cdef Image im = Image.load_color(loc, 0, 0)

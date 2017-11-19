@@ -1,6 +1,7 @@
 # cython: infer_types=True
 from __future__ import print_function
 from libc.stdlib cimport calloc, free, rand
+from libc.string cimport memcpy
 cimport numpy as np
 import shutil
 import tempfile
@@ -27,13 +28,20 @@ cdef extern from "_darknet/data.h" nogil:
 cdef class Image:
     cdef image c
 
-    def __init__(self, int w, int h, int c): 
-        self.c = make_image(w, h, c)
+    def __init__(self, float[:, :, ::1] data): 
+        self.c = make_image(data.shape[0], data.shape[1], data.shape[2])
+        memcpy(self.c.data, &data[0,0,0], data.size * sizeof(float))
 
     @classmethod
     def random(cls, int w, int h, int c):
         cdef Image self = Image.__new__(cls)
         self.c = make_random_image(w, h, c)
+        return self
+
+    @classmethod
+    def blank(cls, int w, int h, int c):
+        cdef Image self = Image.__new__(cls)
+        self.c = make_image(w, h, c)
         return self
 
     @classmethod
@@ -60,13 +68,38 @@ cdef class Image:
         free_image(self.c)
 
 
+cdef class Boxes:
+    cdef box* c
+    cdef int n
+
+    def __init__(self, int n):
+        self.c = <box*>calloc(n, sizeof(box))
+
+
 cdef class BoxLabels:
     cdef box_label* c
     cdef int n
 
-    def __init__(self, path=None):
+    def __init__(self, int[::1] ids, float[:, ::1] data):
+        self.c = <box_label*>calloc(ids.shape[0], sizeof(box_label))
+        for i in range(ids.shape[0]):
+            self.c[i].id = ids[i]
+        for i in range(data.shape[0]):
+            self.c[i].x = data[i, 0]
+            self.c[i].y = data[i, 1]
+            self.c[i].h = data[i, 2]
+            self.c[i].w = data[i, 3]
+            self.c[i].left = self.c[i].x - self.c[i].w/2
+            self.c[i].right = self.c[i].x + self.c[i].w/2
+            self.c[i].top = self.c[i].y - self.c[i].h/2
+            self.c[i].bottom = self.c[i].y + self.c[i].h/2
+
+    @classmethod
+    def load(cls, path):
         cdef bytes loc = unicode(Path(path).resolve()).encode('utf8')
+        cdef BoxLabels self = BoxLabels.__new__(cls)
         self.c = read_boxes(loc, &self.n)
+        return self
 
     def __dealloc__(self):
         free(self.c)
@@ -179,6 +212,14 @@ cdef class Network:
     def num_boxes(self):
         return num_boxes(self.c)
 
+    @property
+    def width(self):
+        return network_width(self.c)
+    
+    @property
+    def height(self):
+        return network_height(self.c)
+
     def load_meta(self, path):
         self.meta = Metadata(path)
 
@@ -205,22 +246,29 @@ cdef class Network:
 
     def __call__(self, Image image, 
             float thresh=.5, float hier_thresh=.5, float nms=.45):
-        return self.detect(image, thresh, hier_thresh, nms)
+        return self._detect(image, thresh, hier_thresh, nms)
 
-    def detect(self, Image image,
+    def update(self, images, labels):
+        cdef DetectionData data
+        data = DetectionData(images, labels,
+                self.width, self.height, self.num_boxes)
+        loss = train_network(self.c, data.c)
+        return loss
+
+    def _detect(self, Image image,
             float thresh=.5, float hier_thresh=.5, float nms=.45):
-        cdef box* boxes = make_boxes(self.c)
-        cdef float** probs = make_probs(self.c)
         num = num_boxes(self.c)
-        network_detect(self.c, image.c, thresh, hier_thresh, nms, boxes, probs)
+        cdef Boxes boxes = Boxes(num)
+        cdef float** probs = make_probs(self.c)
+        network_detect(self.c, image.c, thresh, hier_thresh, nms, boxes.c, probs)
         res = []
         cdef int j, i
         for j in range(num):
             for i in range(self.meta.c.classes):
                 if probs[j][i] > 0:
                     res.append((self.meta.c.names[i], probs[j][i],
-                               (boxes[j].x, boxes[j].y, boxes[j].w, boxes[j].h)))
+                               (boxes.c[j].x, boxes.c[j].y,
+                                boxes.c[j].w, boxes.c[j].h)))
         res = sorted(res, key=lambda x: -x[1])
         free_ptrs(<void**>probs, num)
-        free(boxes)
         return res

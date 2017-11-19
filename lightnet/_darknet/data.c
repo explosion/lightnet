@@ -985,7 +985,6 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int boxes, in
         if(flip) flip_image(sized);
         d.X.vals[i] = sized.data;
 
-
         fill_truth_detection(random_paths[i], boxes, d.y.vals[i], classes, flip, -dx/w, -dy/h, nw/w, nh/h);
 
         free_image(orig);

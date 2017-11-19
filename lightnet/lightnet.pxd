@@ -372,7 +372,7 @@ cdef extern from "_darknet/darknet.h" nogil:
         int index
         float* cost
 
-    ctypedef network network
+    #ctypedef network network
 
     cdef struct _augment_args_s:
         int w

@@ -5,6 +5,11 @@ from cymem.cymem cimport Pool
 import numpy
 from pathlib import Path
 
+try:
+    unicode
+except NameError:
+    unicode = str
+
 
 cdef class Image:
     cdef image c
@@ -40,9 +45,10 @@ cdef class Image:
 cdef class Metadata:
     cdef metadata c
 
-    def __init__(self, bytes loc):
-        if not Path(loc).exists():
-            raise IOError("Metadata file not found: %s" % loc)
+    def __init__(self, path):
+        if not Path(path).exists():
+            raise IOError("Metadata file not found: %s" % path)
+        cdef bytes loc = unicode(path.resolve()).encode('utf8')
         self.c = get_metadata(<char*>loc)
 
     def __dealloc__(self):
@@ -51,6 +57,7 @@ cdef class Metadata:
 
 cdef class Network:
     cdef network* c
+    cdef Metadata meta
 
     def __init__(self):
         self.c = NULL
@@ -59,20 +66,33 @@ cdef class Network:
         if self.c != NULL:
             free_network(self.c)
 
+    def load_meta(self, path):
+        self.meta = Metadata(path)
+
     @classmethod
-    def load(cls, bytes cfg, bytes weights, int clear):
-        if not Path(cfg).exists():
-            raise IOError("Config file not found: %s" % cfg)
-        if not Path(weights).exists():
-            raise IOError("Weights file not found: %s" % cfg)
+    def load(cls, bytes name, *, path=None, int clear=0):
+        if path is None:
+            path = Path(__file__).parent / 'data'
+        path = Path(path)
+        if not path.exists():
+            raise IOError("Data path not found: %s" % path)
+        cfg_path = path / '{name}.cfg'.format(name=name)
+        weights_path = path / '{name}.weights'.format(name=name)
+        if not cfg_path.exists():
+            raise IOError("Config file not found: %s" % cfg_path)
+        if not weights_path.exists():
+            raise IOError("Weights file not found: %s" % weights_path)
         cdef Network self = Network.__new__(cls)
+        cdef bytes cfg = unicode(cfg_path.resolve()).encode('utf8')
+        cdef bytes weights = unicode(weights_path.resolve()).encode('utf8')
         self.c = load_network(<char*>cfg, <char*>weights, clear)
+        # TODO: Fix this hard-coding...
+        self.load_meta(path / 'coco.data')
         return self
 
-    def detect(self, bytes loc, bytes meta_loc,
+    def detect(self, bytes loc,
             float thresh=.5, float hier_thresh=.5, float nms=.45):
         print(loc)
-        cdef Metadata meta = Metadata(meta_loc)
         cdef Image im = Image.load_color(loc, 0, 0)
         cdef box* boxes = make_boxes(self.c)
         cdef float** probs = make_probs(self.c)
@@ -80,9 +100,9 @@ cdef class Network:
         network_detect(self.c, im.c, thresh, hier_thresh, nms, boxes, probs)
         res = []
         for j in range(num):
-            for i in range(meta.c.classes):
+            for i in range(self.meta.c.classes):
                 if probs[j][i] > 0:
-                    res.append((meta.c.names[i], probs[j][i],
+                    res.append((self.meta.c.names[i], probs[j][i],
                                (boxes[j].x, boxes[j].y, boxes[j].w, boxes[j].h)))
         res = sorted(res, key=lambda x: -x[1])
         free_ptrs(<void**>probs, num)

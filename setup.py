@@ -17,6 +17,7 @@ try:
 except ImportError:
     use_cython = False
 
+IS_OSX = False
 
 class ExtensionBuilder(distutils.command.build_ext.build_ext):
     def build_extensions(self):
@@ -32,6 +33,10 @@ class ExtensionBuilder(distutils.command.build_ext.build_ext):
             e.include_dirs.append(numpy.get_include())
             e.include_dirs.append(os.path.abspath(include_dir)),
             e.undef_macros.append("FORTIFY_SOURCE")
+            e.extra_compile_args.append("-DCBLAS")
+            e.extra_link_args.append('-lblas')
+            if sys.platform == 'darwin':
+                e.extra_compile_args.append('-D__APPLE__')
         distutils.command.build_ext.build_ext.build_extensions(self)
     
 

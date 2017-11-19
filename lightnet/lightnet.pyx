@@ -42,6 +42,7 @@ cdef class Image:
     def __dealloc__(self):
         free_image(self.c)
 
+
 cdef class Metadata:
     cdef metadata c
 
@@ -92,13 +93,13 @@ cdef class Network:
 
     def detect(self, bytes loc,
             float thresh=.5, float hier_thresh=.5, float nms=.45):
-        print(loc)
         cdef Image im = Image.load_color(loc, 0, 0)
         cdef box* boxes = make_boxes(self.c)
         cdef float** probs = make_probs(self.c)
-        num   = num_boxes(self.c)
+        num = num_boxes(self.c)
         network_detect(self.c, im.c, thresh, hier_thresh, nms, boxes, probs)
         res = []
+        cdef int j, i
         for j in range(num):
             for i in range(self.meta.c.classes):
                 if probs[j][i] > 0:

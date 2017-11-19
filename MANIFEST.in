@@ -5,4 +5,4 @@ recursive-include lightnet/_darknet *.c
 recursive-include lightnet/_darknet *.h
 recursive-include lightnet/data *.cfg
 recursive-include lightnet/data *.data
-recursive-include lightnet/data *.weights
+recursive-include lightnet/data *.names

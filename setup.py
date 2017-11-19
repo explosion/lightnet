@@ -17,7 +17,6 @@ try:
 except ImportError:
     use_cython = False
 
-IS_OSX = False
 
 class ExtensionBuilder(distutils.command.build_ext.build_ext):
     def build_extensions(self):
@@ -34,9 +33,11 @@ class ExtensionBuilder(distutils.command.build_ext.build_ext):
             e.include_dirs.append(os.path.abspath(include_dir)),
             e.undef_macros.append("FORTIFY_SOURCE")
             e.extra_compile_args.append("-DCBLAS")
-            e.extra_link_args.append('-lblas')
             if sys.platform == 'darwin':
                 e.extra_compile_args.append('-D__APPLE__')
+                e.extra_link_args.append('-lblas')
+            else:
+                e.extra_link_args.append('-lopenblas')
         distutils.command.build_ext.build_ext.build_extensions(self)
     
 
@@ -61,17 +62,17 @@ c_files = get_c_sources(os.path.join(PWD, 'lightnet', '_darknet'))
 
 setup(
     setup_requires=['numpy'],
-    install_requires=['numpy', 'plac', 'requests', 'pathlib'],
+    install_requires=['numpy', 'plac', 'requests', 'pathlib', 'tqdm'],
     ext_modules=[
         Extension('lightnet.lightnet', ['lightnet/lightnet.c']),
     ],
     cmdclass={'build_ext': ExtensionBuilder},
     package_data={'': ['*.json', '*.pyx', '*.pxd', '_darknet/*.h',
-                       'data/*.cfg', 'data/*'] + c_files},
+                       'data/*.cfg', 'data/*.template', 'data/*.names'] + c_files},
 
     name="lightnet",
     packages=['lightnet', 'lightnet.cli'],
-    version="0.0.3",
+    version="0.0.4",
     author="Matthew Honnibal",
     author_email="matt@explosion.ai",
     summary="pjreddie's DarkNet library, brought into the light",

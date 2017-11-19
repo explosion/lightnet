@@ -5,6 +5,8 @@ import plac
 import requests
 import os
 import sys
+from tqdm import tqdm
+from pathlib import Path
 
 
 model_paths = {
@@ -22,12 +24,20 @@ def download(cmd, model, direct=False):
     Download model from default download path. Models: tiny-yolo, yolo, yolo2
     """
     if direct:
-        path = model
+        url = model
+        name = model.split('/')[-1]
     else:
-        path = model_paths[model]
-    r = requests.get(path)
-    if r.status_code != 200:
-        msg = ("Couldn't fetch %s. Please find a model for your spaCy "
-               "installation (v%s), and download it manually.")
-        prints(msg % (desc, about.__version__), about.__docs_models__,
-               title="Server error (%d)" % r.status_code, exits=1)
+        url = model_paths[model]
+        name = model + '.weights'
+    out_loc = Path(__file__).parent.parent / 'data' / name
+    download_file(url, out_loc)
+
+
+def download_file(url, path):
+    r = requests.get(url, stream=True)
+    total_size = int(r.headers.get('content-length', 0))
+    with Path(path).open('wb') as file_:
+        with tqdm(total=total_size//1024, unit_scale=True, unit="K") as pbar:
+            for data in r.iter_content(32*1024):
+                file_.write(data)
+                pbar.update(32)

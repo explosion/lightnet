@@ -1,0 +1,102 @@
+# spaCy
+spacy/data/
+corpora/
+/models/
+keys/
+
+# Website
+website/www/
+website/_deploy.sh
+website/.gitignore
+
+# Cython / C extensions
+cythonize.json
+spacy/*.html
+*.cpp
+*.so
+
+# Vim / VSCode / editors
+*.swp
+*.sw*
+Profile.prof
+.vscode
+.sass-cache
+
+# Python
+.Python
+.python-version
+__pycache__/
+*.py[cod]
+.env/
+.env*
+.~env/
+.venv
+venv/
+.dev
+.denv
+.pypyenv
+
+# Distribution / packaging
+env/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.eggs
+MANIFEST
+
+# Temporary files
+*.~*
+tmp/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Rope
+.ropeproject
+
+# Django stuff:
+*.log
+*.pot
+
+# Windows
+*.bat
+Thumbs.db
+Desktop.ini
+
+# Mac OS X
+*.DS_Store
+
+# Komodo project files
+*.komodoproject
+
+# Other
+*.tgz
+
+# Pycharm project files
+*.idea

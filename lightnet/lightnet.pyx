@@ -1,8 +1,11 @@
 # cython: infer_types=True
 from __future__ import print_function
 from libc.stdlib cimport calloc, free
+import shutil
+import tempfile
 import numpy
 from pathlib import Path
+
 
 try:
     unicode
@@ -48,20 +51,28 @@ cdef class Image:
 
 cdef class Metadata:
     cdef metadata c
+    cdef public object backup_dir
 
-    def __init__(self, path):
-        path = Path(path)
-        if not path.exists():
-            raise IOError("Metadata file not found: %s" % path)
-        with path.open('r', encoding='utf8') as file_:
-            text = file_.read().replace('$HERE', str(path.parent.resolve()))
-        with path.open('w', encoding='utf8') as file_:
+    def __init__(self, template_path):
+        template_path = Path(template_path)
+        if not template_path.exists():
+            raise IOError("Metadata template not found: %s" % template_path)
+        with template_path.open('r', encoding='utf8') as file_:
+            text = file_.read()
+        data_dir = Path(__file__).parent / 'data'
+        self.backup_dir = tempfile.mkdtemp()
+        text = text.replace('$DATA', str(data_dir.resolve()))
+        text = text.replace('$HERE', str(data_dir.resolve()))
+        text = text.replace('$BACKUP', self.backup_dir)
+        out_loc = Path(str(template_path).replace('.template', '.data'))
+        with out_loc.open('w', encoding='utf8') as file_:
             file_.write(text)
-        cdef bytes loc = unicode(path.resolve()).encode('utf8')
+        cdef bytes loc = unicode(out_loc.resolve()).encode('utf8')
         self.c = get_metadata(<char*>loc)
 
     def __dealloc__(self):
         free_ptrs(<void**>self.c.names, self.c.classes)
+        shutil.rmtree(self.backup_dir)
 
 
 cdef class Network:
@@ -96,7 +107,7 @@ cdef class Network:
         cdef bytes weights = unicode(weights_path.resolve()).encode('utf8')
         self.c = load_network(<char*>cfg, <char*>weights, clear)
         # TODO: Fix this hard-coding...
-        self.load_meta(path / 'coco.data')
+        self.load_meta(path / 'coco.template')
         return self
 
     def __call__(self, loc, 

@@ -6,7 +6,7 @@ cdef extern from "pthread.h":
     ctypedef int pthread_t
 
 
-cdef extern from "../_src/include/darknet.h" nogil:
+cdef extern from "_darknet/darknet.h" nogil:
 
     int gpu_index
 

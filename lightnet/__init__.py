@@ -1,2 +1,2 @@
-from .darknet import Image
-from .darknet import Network
+from .lightnet import Image
+from .lightnet import Network

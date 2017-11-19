@@ -64,7 +64,7 @@ setup(
     package_data={'': ['*.json', '*.pyx', '*.pxd', '_darknet/*.h'] + c_files},
 
     name="lightnet",
-    packages=['lightnet'],
+    packages=['lightnet', 'lightnet.cli'],
     version="0.0.1",
     author="Matthew Honnibal",
     author_email="matt@explosion.ai",

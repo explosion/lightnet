@@ -68,7 +68,13 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
         float BETA,
         float *C, int ldc)
 {
+
+    #ifdef CBLAS
+    gemm_cblas(TA, TB, M, N, K, ALPHA, A, lda, B, ldb, BETA, C, ldc);
+    #endif
+    #ifndef CBLAS
     gemm_cpu( TA,  TB,  M, N, K, ALPHA,A,lda, B, ldb,BETA,C,ldc);
+    #endif
 }
 
 void gemm_nn(int M, int N, int K, float ALPHA, 
@@ -141,6 +147,24 @@ void gemm_tt(int M, int N, int K, float ALPHA,
     }
 }
 
+#ifdef CBLAS
+#include <cblas.h>
+void gemm_cblas(int TA, int TB, int M, int N, int K, float ALPHA, 
+        float *A, int lda, 
+        float *B, int ldb,
+        float BETA,
+        float *C, int ldc)
+{
+    if(!TA && !TB)
+        cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, ALPHA, A, lda, B, ldb, BETA, C, ldc);
+    else if(TA && !TB)
+        cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, M, N, K, ALPHA, A, lda, B, ldb, BETA, C, ldc);
+    else if(!TA && TB)
+        cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, M, N, K, ALPHA, A, lda, B, ldb, BETA, C, ldc);
+    else
+        cblas_sgemm(CblasRowMajor, CblasTrans, CblasTrans, M, N, K, ALPHA, A, lda, B, ldb, BETA, C, ldc);
+}
+#endif
 
 void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA, 
         float *A, int lda, 

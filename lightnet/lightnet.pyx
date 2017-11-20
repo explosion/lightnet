@@ -117,58 +117,86 @@ cdef class DetectionData:
         self.c.X.cols = h*w*3
         self.c.y = make_matrix(n, 5*num_boxes)
 
-        cdef Image image
-        cdef BoxLabels boxes
-        for i, (image, boxes) in enumerate(zip(images, labels)):
-            self._fill_Xy_vals(&self.c.X.vals[i], self.c.y.vals[i],
-                image.c, boxes.c, num_boxes,
-                w, h, jitter, hue, saturation, exposure)
+        cdef Image py_image
+        cdef BoxLabels py_boxes
+        cdef float dw, dh, nw, nh, dx, dy
+        cdef float* truth
+        for i, (py_image, py_boxes) in enumerate(zip(images, labels)):
+            orig = py_image.c
+            sized = make_image(w, h, orig.c)
+            fill_image(sized, .5)
+
+            dw = jitter * orig.w
+            dh = jitter * orig.h
+
+            new_ar = (orig.w + rand_uniform(-dw, dw)) / (orig.h + rand_uniform(-dh, dh))
+            scale = rand_uniform(.25, 2)
+
+            if new_ar < 1:
+                nh = scale * h
+                nw = nh * new_ar
+            else:
+                nw = scale * w
+                nh = nw / new_ar
+
+            dx = rand_uniform(0, w - nw)
+            dy = rand_uniform(0, h - nh)
+
+            place_image(orig, <int>nw, <int>nh, <int>dx, <int>dy, sized)
+
+            random_distort_image(sized, hue, saturation, exposure)
+
+            flip = rand() % 2
+            if flip:
+                flip_image(sized)
+            self.c.X.vals[i] = sized.data
+            
+            #fill_truth_detection(random_paths[i], boxes, d.y.vals[i], classes,
+            #   flip -dx/w, -dy/h, nw/w, nh/h);
+            # void fill_truth_detection(char *path, int num_boxes, float *truth, int classes,
+            #   int flip, float dx, float dy, float sx, float sy)
+            boxes = py_boxes.c
+            count = py_boxes.n
+            randomize_boxes(boxes, count)
+            correct_boxes(boxes, count, -dx/w, -dy/h, nw/w, nh/h, flip)
+            count = min(count, num_boxes)
+            truth = self.c.y.vals[i]
+            for j in range(count):
+                box = boxes[j]
+                if (box.w < .001 or box.h < .001):
+                    continue
+                truth[j*5+0] = box.x
+                truth[j*5+1] = box.y
+                truth[j*5+2] = box.w
+                truth[j*5+3] = box.h
+                truth[j*5+4] = box.id
  
     def __dealloc__(self):
         free_data(self.c)
 
-    cdef float* _fill_Xy_vals(self, float** X, float* truth,
-            image orig, box_label* boxes, int num_boxes, int w, int h,
-            float jitter, float hue, float saturation, float exposure) nogil:
-        cdef float dw, dh, nw, nh, dx, dy
-        sized = make_image(w, h, orig.c)
-        fill_image(sized, .5)
+    @property
+    def Xs(self):
+        output = []
+        for i in range(self.c.X.rows):
+            vals = [self.c.X.vals[i][j] for j in range(self.c.X.cols)]
+            output.append(vals)
+        return output
+    
+    @property
+    def ys(self):
+        output = []
+        for i in range(self.c.y.rows):
+            vals = [self.c.y.vals[i][j] for j in range(self.c.y.cols)]
+            output.append(vals)
+        return output
 
-        dw = jitter * orig.w
-        dh = jitter * orig.h
-
-        new_ar = (orig.w + rand_uniform(-dw, dw)) / (orig.h + rand_uniform(-dh, dh))
-        scale = rand_uniform(.25, 2)
-
-        if new_ar < 1:
-            nh = scale * h
-            nw = nh * new_ar
-        else:
-            nw = scale * w
-            nh = nw / new_ar
-
-        dx = rand_uniform(0, w - nw)
-        dy = rand_uniform(0, h - nh)
-
-        place_image(orig, <int>nw, <int>nh, <int>dx, <int>dy, sized)
-
-        random_distort_image(sized, hue, saturation, exposure)
-
-        flip = rand() % 2
-        if flip:
-            flip_image(sized)
-        X[0] = sized.data
-        randomize_boxes(boxes, num_boxes)
-        correct_boxes(boxes, num_boxes, -dx/w, -dy/h, nw/w, nh/h, flip)
-        for i in range(num_boxes):
-            box = boxes[i]
-            if (box.w < .001 or box.h < .001):
-                continue
-            truth[i*5+0] = box.x
-            truth[i*5+1] = box.y
-            truth[i*5+2] = box.w
-            truth[i*5+3] = box.h
-            truth[i*5+4] = box.id
+    @property
+    def X_shape(self):
+        return (self.c.X.rows, self.c.X.cols)
+    
+    @property
+    def y_shape(self):
+        return (self.c.y.rows, self.c.y.cols)
 
 
 cdef class Metadata:
@@ -252,7 +280,9 @@ cdef class Network:
         cdef DetectionData data
         data = DetectionData(images, labels,
                 self.width, self.height, self.num_boxes)
-        loss = train_network(self.c, data.c)
+        get_next_batch(data.c, self.c.batch, 0, self.c.input, self.c.truth)
+        #loss = train_network_datum(self.c)
+        loss = 0
         return loss
 
     def _detect(self, Image image,
@@ -266,9 +296,10 @@ cdef class Network:
         for j in range(num):
             for i in range(self.meta.c.classes):
                 if probs[j][i] > 0:
-                    res.append((self.meta.c.names[i], probs[j][i],
+                    res.append((i, self.meta.c.names[i], probs[j][i],
                                (boxes.c[j].x, boxes.c[j].y,
                                 boxes.c[j].w, boxes.c[j].h)))
-        res = sorted(res, key=lambda x: -x[1])
+        res = sorted(res, key=lambda x: -x[2])
         free_ptrs(<void**>probs, num)
+        print(res)
         return res

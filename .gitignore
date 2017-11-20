@@ -1,10 +1,5 @@
 *.weights
 
-# Website
-website/www/
-website/_deploy.sh
-website/.gitignore
-
 # Cython / C extensions
 cythonize.json
 spacy/*.html

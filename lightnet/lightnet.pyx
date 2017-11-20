@@ -2,7 +2,7 @@
 # cython: cdivision=True
 from __future__ import print_function
 from libc.stdlib cimport calloc, free, rand
-from libc.string cimport memcpy
+from libc.string cimport memcpy, memset
 cimport numpy as np
 import shutil
 import tempfile
@@ -65,8 +65,8 @@ cdef class Image:
         self.c = load_image_color(<char*>loc, w, h)
         return self
 
-    def __dealloc__(self):
-        free_image(self.c)
+    #def __dealloc__(self):
+    #    free_image(self.c)
 
 
 cdef class Boxes:
@@ -123,10 +123,10 @@ cdef class BoxLabels:
         self.c = read_boxes(loc, &self.n)
         return self
 
-    def __dealloc__(self):
-        if self.c != NULL:
-            free(self.c)
-        self.c = NULL
+    #def __dealloc__(self):
+    #    if self.c != NULL:
+    #        free(self.c)
+    #    self.c = NULL
 
     @property
     def x(self):
@@ -214,10 +214,10 @@ cdef class DetectionData:
             self.c.X.vals[i] = sized.data
             _fill_truth_region(py_boxes.c, py_boxes.n, self.c.y.vals[i],
                               classes, size, flip, dx, dy, 1./sx, 1./sy)
-            free_image(cropped)
+            #free_image(cropped)
 
-    def __dealloc__(self):
-        free_data(self.c)
+    #def __dealloc__(self):
+    #    free_data(self.c)
 
     @property
     def Xs(self):
@@ -304,9 +304,9 @@ cdef class Metadata:
         cdef bytes loc = unicode(out_loc.resolve()).encode('utf8')
         self.c = get_metadata(<char*>loc)
 
-    def __dealloc__(self):
-        free_ptrs(<void**>self.c.names, self.c.classes)
-        shutil.rmtree(self.backup_dir)
+    #def __dealloc__(self):
+    #    free_ptrs(<void**>self.c.names, self.c.classes)
+    #    shutil.rmtree(self.backup_dir)
 
 
 cdef class Network:
@@ -316,9 +316,10 @@ cdef class Network:
     def __init__(self):
         self.c = NULL
 
-    def __dealloc__(self):
-        if self.c != NULL:
-            free_network(self.c)
+    #def __dealloc__(self):
+    #    if self.c != NULL:
+    #        free_network(self.c)
+    #        self.c = NULL
 
     @property
     def num_classes(self):
@@ -399,3 +400,57 @@ cdef class Network:
         res = sorted(res, key=lambda x: -x[2])
         free_ptrs(<void**>probs, num)
         return res
+
+
+def train(bytes cfgfile_, bytes weightfile_, bytes train_images_, bytes backup_directory_):
+    cdef char* cfgfile = cfgfile_
+    cdef char* weightfile = weightfile_
+    cdef char* train_images = train_images_
+    cdef char* backup_directory = backup_directory_
+    cdef network* net = load_network(cfgfile, weightfile, 0)
+    cdef char* base = basecfg(cfgfile)
+    print("Learning Rate: %f, Momentum: %f, Decay: %f\n" % 
+            (net.learning_rate, net.momentum, net.decay))
+    cdef int imgs = net.batch * net.subdivisions
+    cdef int i = net.seen[0]/imgs
+    cdef data train
+
+    cdef layer l = net.layers[net.n - 1]
+
+    cdef int side = l.side
+    cdef int classes = l.classes
+    cdef float jitter = l.jitter
+
+    cdef list *plist = get_paths(train_images)
+    cdef char **paths = <char**>list_to_array(plist)
+
+    cdef load_args args
+    memset(&args, 0, sizeof(args))
+    args.w = net.w
+    args.h = net.h
+    args.paths = paths
+    args.n = imgs
+    args.m = plist.size
+    args.classes = classes
+    args.jitter = jitter
+    args.num_boxes = side
+    args.d = &train
+    args.type = REGION_DATA
+
+    args.angle = net.angle
+    args.exposure = net.exposure
+    args.saturation = net.saturation
+    args.hue = net.hue
+
+    cdef float loss
+    print(args.m)
+    load_data_blocking(args)
+    loss = train_network(net, train)
+    print(loss)
+    #while True or get_current_batch(net) < net.max_batches:
+    #    load_data_blocking(args)
+
+    #    loss = train_network(net, train)
+    #    print(loss)
+
+    #    free_data(train)

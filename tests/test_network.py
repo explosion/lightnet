@@ -3,6 +3,7 @@ from lightnet import Network, Image, BoxLabels
 from lightnet.lightnet import DetectionData
 import numpy
 import pytest
+from pathlib import Path
 
 @pytest.fixture
 def ids_xywh():
@@ -11,7 +12,7 @@ def ids_xywh():
 
 @pytest.fixture
 def image():
-    return Image.load_color("_src/coco/images/val2014/COCO_val2014_000000000042.jpg")
+    return Image.load_color(Path("val2014/COCO_val2014_000000000042.jpg")
 
 @pytest.fixture
 def box_labels(ids_xywh):

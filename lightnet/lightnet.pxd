@@ -7,56 +7,7 @@ cdef extern from "pthread.h":
 
 
 cdef extern from "_darknet/darknet.h" nogil:
-
-    int gpu_index
-
-    cdef struct _metadata_s:
-        int classes
-        char** names
-
-    ctypedef _metadata_s metadata
-
-    metadata get_metadata(char* file)
-
-    cdef struct _tree_s:
-        int* leaf
-        int n
-        int* parent
-        int* child
-        int* group
-        char** name
-        int groups
-        int* group_size
-        int* group_offset
-
-    ctypedef _tree_s tree
-
-    cdef enum _ACTIVATION_e:
-        LOGISTIC
-        RELU
-        RELIE
-        LINEAR
-        RAMP
-        TANH
-        PLSE
-        LEAKY
-        ELU
-        LOGGY
-        STAIR
-        HARDTAN
-        LHTAN
-
-    ctypedef _ACTIVATION_e ACTIVATION
-
-    cdef enum _BINARY_ACTIVATION_e:
-        MULT
-        ADD
-        SUB
-        DIV
-
-    ctypedef _BINARY_ACTIVATION_e BINARY_ACTIVATION
-
-    cdef enum _LAYER_TYPE_e:
+    ctypedef enum LAYER_TYPE:
         CONVOLUTIONAL
         DECONVOLUTIONAL
         CONNECTED
@@ -83,16 +34,60 @@ cdef extern from "_darknet/darknet.h" nogil:
         REORG
         BLANK
 
-    ctypedef _LAYER_TYPE_e LAYER_TYPE
 
-    cdef enum _COST_TYPE_e:
+cdef extern from "_darknet/darknet.h" nogil:
+    int gpu_index
+
+    cdef struct _metadata_s:
+        int classes
+        char** names
+
+    ctypedef _metadata_s metadata
+
+    metadata get_metadata(char* file)
+
+    cdef struct _tree_s:
+        int* leaf
+        int n
+        int* parent
+        int* child
+        int* group
+        char** name
+        int groups
+        int* group_size
+        int* group_offset
+
+    ctypedef _tree_s tree
+
+    cdef enum ACTIVATION:
+        LOGISTIC
+        RELU
+        RELIE
+        LINEAR
+        RAMP
+        TANH
+        PLSE
+        LEAKY
+        ELU
+        LOGGY
+        STAIR
+        HARDTAN
+        LHTAN
+
+
+    cdef enum BINARY_ACTIVATION:
+        MULT
+        ADD
+        SUB
+        DIV
+
+
+    cdef enum COST_TYPE:
         SSE
         MASKED
         L1
         SEG
         SMOOTH
-
-    ctypedef _COST_TYPE_e COST_TYPE
 
     cdef struct _update_args_s:
         int batch

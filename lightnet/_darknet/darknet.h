@@ -693,18 +693,18 @@ void random_distort_image(image im, float hue, float saturation, float exposure)
 void fill_image(image m, float s);
 image grayscale_image(image im);
 void rotate_image_cw(image im, int times);
-double what_time_is_it_now();
+double what_time_is_it_now(void);
 image rotate_image(image m, float rad);
 void visualize_network(network *net);
 float box_iou(box a, box b);
 void do_nms(box *boxes, float **probs, int total, int classes, float thresh);
-data load_all_cifar10();
+data load_all_cifar10(void);
 box_label *read_boxes(char *filename, int *n);
 box float_to_box(float *f, int stride);
 void draw_detections(image im, int num, float thresh, box *boxes, float **probs, float **masks, char **names, image **alphabet, int classes);
 
 matrix network_predict_data(network *net, data test);
-image **load_alphabet();
+image **load_alphabet(void);
 image get_network_image(network *net);
 float *network_predict(network *net, float *input);
 
@@ -764,7 +764,7 @@ float mean_array(float *a, int n);
 float sum_array(float *a, int n);
 void normalize_array(float *a, int n);
 int *read_intlist(char *s, int *n, int d);
-size_t rand_size_t();
-float rand_normal();
+size_t rand_size_t(void);
+float rand_normal(void);
 
 #endif

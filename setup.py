@@ -73,7 +73,7 @@ setup(
 
     name="lightnet",
     packages=['lightnet', 'lightnet.cli'],
-    version="0.0.4",
+    version="0.0.5",
     author="Matthew Honnibal",
     author_email="matt@explosion.ai",
     summary="pjreddie's DarkNet library, brought into the light",

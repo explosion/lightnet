@@ -107,10 +107,76 @@ cdef extern from "_darknet/darknet.h" nogil:
 
     ctypedef _update_args_s update_args
 
-    ctypedef network network
+    #ctypedef network network
 
-    ctypedef layer layer
+    cdef enum _learning_rate_policy_e:
+        CONSTANT
+        STEP
+        EXP
+        POLY
+        STEPS
+        SIG
+        RANDOM
 
+    ctypedef _learning_rate_policy_e learning_rate_policy
+
+    #ctypedef layer layer
+
+    cdef struct network:
+        int n
+        int batch
+        size_t* seen
+        int* t
+        float epoch
+        int subdivisions
+        layer* layers
+        float* output
+        learning_rate_policy policy
+        float learning_rate
+        float momentum
+        float decay
+        float gamma
+        float scale
+        float power
+        int time_steps
+        int step
+        int max_batches
+        float* scales
+        int* steps
+        int num_steps
+        int burn_in
+        int adam
+        float B1
+        float B2
+        float eps
+        int inputs
+        int outputs
+        int truths
+        int notruth
+        int h
+        int w
+        int c
+        int max_crop
+        int min_crop
+        float max_ratio
+        float min_ratio
+        int center
+        float angle
+        float aspect
+        float exposure
+        float saturation
+        float hue
+        int random
+        int gpu_index
+        tree* hierarchy
+        float* input
+        float* truth
+        float* delta
+        float* workspace
+        int train
+        int index
+        float* cost
+       
     ctypedef void (*_layer_forward_ft)(layer, network)
 
     ctypedef void (*_layer_backward_ft)(layer, network)
@@ -306,71 +372,6 @@ cdef extern from "_darknet/darknet.h" nogil:
 
     void free_layer(layer)
 
-    cdef enum _learning_rate_policy_e:
-        CONSTANT
-        STEP
-        EXP
-        POLY
-        STEPS
-        SIG
-        RANDOM
-
-    ctypedef _learning_rate_policy_e learning_rate_policy
-
-    cdef struct network:
-        int n
-        int batch
-        size_t* seen
-        int* t
-        float epoch
-        int subdivisions
-        layer* layers
-        float* output
-        learning_rate_policy policy
-        float learning_rate
-        float momentum
-        float decay
-        float gamma
-        float scale
-        float power
-        int time_steps
-        int step
-        int max_batches
-        float* scales
-        int* steps
-        int num_steps
-        int burn_in
-        int adam
-        float B1
-        float B2
-        float eps
-        int inputs
-        int outputs
-        int truths
-        int notruth
-        int h
-        int w
-        int c
-        int max_crop
-        int min_crop
-        float max_ratio
-        float min_ratio
-        int center
-        float angle
-        float aspect
-        float exposure
-        float saturation
-        float hue
-        int random
-        int gpu_index
-        tree* hierarchy
-        float* input
-        float* truth
-        float* delta
-        float* workspace
-        int train
-        int index
-        float* cost
 
     #ctypedef network network
 

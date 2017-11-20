@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: cdivision=True
 from __future__ import print_function
 from libc.stdlib cimport calloc, free, rand
 from libc.string cimport memcpy
@@ -81,7 +82,10 @@ cdef class BoxLabels:
     cdef int n
 
     def __init__(self, int[::1] ids, float[:, ::1] data):
+        assert ids.shape[0] == data.shape[0]
+        assert data.shape[1] == 4
         self.c = <box_label*>calloc(ids.shape[0], sizeof(box_label))
+        self.n = ids.shape[0]
         for i in range(ids.shape[0]):
             self.c[i].id = ids[i]
         for i in range(data.shape[0]):
@@ -102,7 +106,41 @@ cdef class BoxLabels:
         return self
 
     def __dealloc__(self):
-        free(self.c)
+        if self.c != NULL:
+            free(self.c)
+        self.c = NULL
+
+    @property
+    def x(self):
+        return [self.c[i].x for i in range(self.n)]
+
+    @property
+    def y(self):
+        return [self.c[i].y for i in range(self.n)]
+
+    @property
+    def h(self):
+        return [self.c[i].h for i in range(self.n)]
+
+    @property
+    def w(self):
+        return [self.c[i].w for i in range(self.n)]
+
+    @property
+    def left(self):
+        return [self.c[i].left for i in range(self.n)]
+
+    @property
+    def right(self):
+        return [self.c[i].right for i in range(self.n)]
+
+    @property
+    def top(self):
+        return [self.c[i].top for i in range(self.n)]
+
+    @property
+    def bottom(self):
+        return [self.c[i].bottom for i in range(self.n)]
 
 
 cdef class DetectionData:
@@ -171,8 +209,8 @@ cdef class DetectionData:
                 truth[j*5+3] = box.h
                 truth[j*5+4] = box.id
  
-    def __dealloc__(self):
-        free_data(self.c)
+    #def __dealloc__(self):
+    #    free_data(self.c)
 
     @property
     def Xs(self):
@@ -220,9 +258,9 @@ cdef class Metadata:
         cdef bytes loc = unicode(out_loc.resolve()).encode('utf8')
         self.c = get_metadata(<char*>loc)
 
-    def __dealloc__(self):
-        free_ptrs(<void**>self.c.names, self.c.classes)
-        shutil.rmtree(self.backup_dir)
+    #def __dealloc__(self):
+    #    free_ptrs(<void**>self.c.names, self.c.classes)
+    #    shutil.rmtree(self.backup_dir)
 
 
 cdef class Network:
@@ -232,9 +270,9 @@ cdef class Network:
     def __init__(self):
         self.c = NULL
 
-    def __dealloc__(self):
-        if self.c != NULL:
-            free_network(self.c)
+    #def __dealloc__(self):
+    #    if self.c != NULL:
+    #        free_network(self.c)
 
     @property
     def num_boxes(self):
@@ -278,11 +316,15 @@ cdef class Network:
 
     def update(self, images, labels):
         cdef DetectionData data
+        cdef int max_boxes = self.c.layers[self.c.n-1].max_boxes
         data = DetectionData(images, labels,
-                self.width, self.height, self.num_boxes)
-        get_next_batch(data.c, self.c.batch, 0, self.c.input, self.c.truth)
-        #loss = train_network_datum(self.c)
-        loss = 0
+                self.width, self.height, max_boxes)
+        cdef float loss = 0.
+        assert data.c.X.rows % self.c.batch == 0
+        cdef int batch = self.c.batch
+        cdef int n = data.c.X.rows / batch
+
+        loss = train_network(self.c, data.c)
         return loss
 
     def _detect(self, Image image,
@@ -301,5 +343,4 @@ cdef class Network:
                                 boxes.c[j].w, boxes.c[j].h)))
         res = sorted(res, key=lambda x: -x[2])
         free_ptrs(<void**>probs, num)
-        print(res)
         return res

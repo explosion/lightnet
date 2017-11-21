@@ -25,6 +25,12 @@ cdef extern from "_darknet/data.h" nogil:
     void correct_boxes(box_label *boxes, int n, float dx, float dy, float sx, float sy, int flip)
     void randomize_boxes(box_label *b, int n)
 
+
+cdef extern from "_darknet/stb_image.h" nogil:
+    ctypedef unsigned char stbi_uc
+    stbi_uc *stbi_load_from_memory(const stbi_uc* raw, int length, int *x,
+                                   int *y, int *comp, int req_comp)
+
 cdef class Image:
     cdef image c
 
@@ -32,6 +38,39 @@ cdef class Image:
         self.c = make_image(data.shape[0], data.shape[1], data.shape[2])
         memcpy(self.c.data, &data[0,0,0], data.size * sizeof(float))
 
+    @property
+    def data(self):
+        cdef np.ndarray array = numpy.zeros((self.c.w, self.c.h, self.c.c),
+                                             dtype='f')
+        memcpy(<float*>array.data, self.c.data, self.c.h*self.c.w*self.c.c*sizeof(float))
+        return array
+
+    @property
+    def width(self):
+        return self.c.w
+
+    @property
+    def height(self):
+        return self.c.h
+
+    @classmethod
+    def from_bytes(cls, bytes raw, int channels=3):
+        cdef stbi_uc* img_data
+        cdef int w, h, c
+        img_data = stbi_load_from_memory(<stbi_uc*>raw, len(raw),
+                        &w, &h, &c, channels)
+        if channels:
+            c = channels
+        cdef Image self = Image.blank(w, h, c)
+        cdef int k, j, i, dst_index, src_index
+        for k in range(c):
+            for j in range(h):
+                for i in range(w):
+                    dst_index = i + w*j + w*h*k
+                    src_index = k + c*i + c*w*j
+                    self.c.data[dst_index] = <float>img_data[src_index] / 255.
+        return self
+ 
     @classmethod
     def random(cls, int w, int h, int c):
         cdef Image self = Image.__new__(cls)

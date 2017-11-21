@@ -25,7 +25,6 @@ cdef extern from "_darknet/data.h" nogil:
     void correct_boxes(box_label *boxes, int n, float dx, float dy, float sx, float sy, int flip)
     void randomize_boxes(box_label *b, int n)
 
-
 cdef class Image:
     cdef image c
 
@@ -413,7 +412,6 @@ def train(bytes cfgfile_, bytes weightfile_, bytes train_images_, bytes backup_d
             (net.learning_rate, net.momentum, net.decay))
     cdef int imgs = net.batch * net.subdivisions
     cdef int i = net.seen[0]/imgs
-    cdef data train
 
     cdef layer l = net.layers[net.n - 1]
 
@@ -425,26 +423,35 @@ def train(bytes cfgfile_, bytes weightfile_, bytes train_images_, bytes backup_d
     cdef char **paths = <char**>list_to_array(plist)
 
     cdef load_args args
-    memset(&args, 0, sizeof(args))
+    #memset(&args, 0, sizeof(args))
     args.w = net.w
     args.h = net.h
     args.paths = paths
+    args.coords = l.coords
     args.n = imgs
     args.m = plist.size
     args.classes = classes
     args.jitter = jitter
-    args.num_boxes = side
-    args.d = &train
-    args.type = REGION_DATA
-
+    args.num_boxes = l.max_boxes
+    args.type = DETECTION_DATA
     args.angle = net.angle
     args.exposure = net.exposure
     args.saturation = net.saturation
     args.hue = net.hue
 
     cdef float loss
-    print(args.m)
-    load_data_blocking(args)
+    if args.exposure == 0:
+        args.exposure = 1
+    if args.saturation == 0:
+        args.saturation = 1
+    if args.aspect == 0:
+        args.aspect = 1
+    print('Classes', args.classes, 'num boxes', args.num_boxes)
+
+    cdef data train = load_data_detection(args.n, args.paths, args.m, args.w, args.h,
+                        args.num_boxes, args.classes, args.jitter,
+                        args.hue, args.saturation, args.exposure)
+
     loss = train_network(net, train)
     print(loss)
     #while True or get_current_batch(net) < net.max_batches:

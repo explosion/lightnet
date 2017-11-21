@@ -404,7 +404,7 @@ cdef extern from "_darknet/darknet.h" nogil:
 
     ctypedef matrix matrix
 
-    cdef struct _data_s:
+    ctypedef struct data:
         int w
         int h
         matrix X
@@ -412,8 +412,6 @@ cdef extern from "_darknet/darknet.h" nogil:
         int shallow
         int* num_boxes
         box** boxes
-
-    ctypedef _data_s data
 
     cdef enum _data_type_e:
         CLASSIFICATION_DATA
@@ -506,6 +504,15 @@ cdef extern from "_darknet/darknet.h" nogil:
     ctypedef list list
 
     pthread_t load_data(load_args args)
+
+
+    data load_data_region(int n, char **paths, int m, int w, int h, int size,
+                          int classes, float jitter, float hue,
+                          float saturation, float exposure)
+
+    data load_data_detection(int n, char **paths, int m, int w, int h, int size,
+                          int classes, float jitter, float hue,
+                          float saturation, float exposure)
 
     list* read_data_cfg(char* filename)
 

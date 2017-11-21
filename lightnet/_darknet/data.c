@@ -781,7 +781,6 @@ data load_data_region(int n, char **paths, int m, int w, int h, int size, int cl
     d.X.vals = calloc(d.X.rows, sizeof(float*));
     d.X.cols = h*w*3;
 
-
     int k = size*size*(5+classes);
     d.y = make_matrix(n, k);
     for(i = 0; i < n; ++i){

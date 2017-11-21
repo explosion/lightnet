@@ -32,6 +32,8 @@ data load_data_augment(char **paths, int n, int m, char **labels, int k, tree *h
 data load_data_regression(char **paths, int n, int m, int min, int max, int size, float angle, float aspect, float hue, float saturation, float exposure);
 data load_go(char *filename);
 
+data load_data_region(int n, char **paths, int m, int w, int h, int size, int classes, float jitter, float hue, float saturation, float exposure);
+
 
 data load_data_writing(char **paths, int n, int m, int w, int h, int out_w, int out_h);
 

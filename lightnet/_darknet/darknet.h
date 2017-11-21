@@ -585,6 +585,9 @@ data resize_data(data orig, int w, int h);
 data *tile_data(data orig, int divs, int size);
 data select_data(data *orig, int *inds);
 
+data load_data_region(int n, char **paths, int m, int w, int h, int size, int classes, float jitter, float hue, float saturation, float exposure);
+
+
 void forward_network(network *net);
 void backward_network(network *net);
 void update_network(network *net);

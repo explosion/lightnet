@@ -64,8 +64,8 @@ cdef class Image:
         self.c = load_image_color(<char*>loc, w, h)
         return self
 
-    #def __dealloc__(self):
-    #    free_image(self.c)
+    def __dealloc__(self):
+        free_image(self.c)
 
 
 cdef class Boxes:
@@ -122,10 +122,10 @@ cdef class BoxLabels:
         self.c = read_boxes(loc, &self.n)
         return self
 
-    #def __dealloc__(self):
-    #    if self.c != NULL:
-    #        free(self.c)
-    #    self.c = NULL
+    def __dealloc__(self):
+        if self.c != NULL:
+            free(self.c)
+        self.c = NULL
 
     @property
     def x(self):
@@ -183,8 +183,8 @@ cdef class DetectionData:
                                     py_image.c, py_boxes.c, py_boxes.n, max_boxes,
                                     classes, jitter, hue, saturation, exposure)
     
-    #def __dealloc__(self):
-    #    free_data(self.c)
+    def __dealloc__(self):
+        free_data(self.c)
 
     @property
     def Xs(self):
@@ -296,9 +296,9 @@ cdef class Metadata:
         cdef bytes loc = unicode(out_loc.resolve()).encode('utf8')
         self.c = get_metadata(<char*>loc)
 
-    #def __dealloc__(self):
-    #    free_ptrs(<void**>self.c.names, self.c.classes)
-    #    shutil.rmtree(self.backup_dir)
+    def __dealloc__(self):
+        free_ptrs(<void**>self.c.names, self.c.classes)
+        shutil.rmtree(self.backup_dir)
 
 
 cdef class Network:
@@ -308,10 +308,10 @@ cdef class Network:
     def __init__(self):
         self.c = NULL
 
-    #def __dealloc__(self):
-    #    if self.c != NULL:
-    #        free_network(self.c)
-    #        self.c = NULL
+    def __dealloc__(self):
+        if self.c != NULL:
+            free_network(self.c)
+            self.c = NULL
 
     @property
     def num_classes(self):

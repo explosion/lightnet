@@ -39,6 +39,7 @@ class ExtensionBuilder(distutils.command.build_ext.build_ext):
                 e.extra_link_args.append('-lblas')
             else:
                 e.extra_link_args.append('-lopenblas')
+                e.extra_link_args.append('-L/opt/OpenBLAS/lib')
         distutils.command.build_ext.build_ext.build_extensions(self)
     
 

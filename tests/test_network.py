@@ -36,7 +36,7 @@ def test_box_labels(box_labels):
 def test_detection_data(image, box_labels):
     net = Network.load("tiny-yolo")
     data = DetectionData([image], [box_labels],
-                         net.width, net.height, net.side, net.num_classes)
+                         net.width, net.height, net.max_boxes, net.num_classes)
     #assert data.X_shape == (1, net.width * net.height * 3)
     #assert data.y_shape == (1, net.num_boxes * 5)
 

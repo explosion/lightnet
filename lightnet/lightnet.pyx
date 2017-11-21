@@ -163,15 +163,14 @@ cdef class BoxLabels:
 cdef class DetectionData:
     cdef data c
 
-    def __init__(self, images, labels, int w, int h, int size, int classes,
+    def __init__(self, images, labels, int w, int h, int max_boxes, int classes,
             float jitter=0.2, float hue=0.1, float saturation=1.5, float exposure=1.5):
         self.c.shallow = 0
         cdef int n = len(images)
         self.c.X.rows = n
         self.c.X.vals = <float**>calloc(self.c.X.rows, sizeof(float*))
         self.c.X.cols = h*w*3
-        cdef int k = size * size * (5+classes)
-        self.c.y = make_matrix(n, k)
+        self.c.y = make_matrix(n, 5 * max_boxes)
 
         cdef Image py_image
         cdef BoxLabels py_boxes
@@ -180,41 +179,10 @@ cdef class DetectionData:
         cdef int index = 0
         cdef float pleft, pright, pwidth, pheight
         for i, (py_image, py_boxes) in enumerate(zip(images, labels)):
-            orig = py_image.c
-
-            oh = orig.h
-            ow = orig.w
-
-            dw = (ow*jitter)
-            dh = (oh*jitter)
-
-            pleft  = rand_uniform(-dw, dw)
-            pright = rand_uniform(-dw, dw)
-            ptop   = rand_uniform(-dh, dh)
-            pbot   = rand_uniform(-dh, dh)
-
-            swidth =  ow - pleft - pright
-            sheight = oh - ptop - pbot
-
-            sx = <float>swidth  / ow
-            sy = <float>sheight / oh
-
-            flip = rand() % 2
-            cropped = crop_image(orig, <int>pleft, <int>ptop, <int>swidth, <int>sheight)
-
-            dx = (<float>pleft/ow)/sx
-            dy = (<float>ptop /oh)/sy
-            
-            sized = resize_image(cropped, w, h)
-            if flip:
-                flip_image(sized)
-            random_distort_image(sized, hue, saturation, exposure)
-
-            self.c.X.vals[i] = sized.data
-            _fill_truth_region(py_boxes.c, py_boxes.n, self.c.y.vals[i],
-                              classes, size, flip, dx, dy, 1./sx, 1./sy)
-            #free_image(cropped)
-
+            self.c.X.vals[i] = _load_data_detection(self.c.y.vals[i],
+                                    py_image.c, py_boxes.c, py_boxes.n, max_boxes,
+                                    classes, jitter, hue, saturation, exposure)
+    
     #def __dealloc__(self):
     #    free_data(self.c)
 
@@ -243,44 +211,69 @@ cdef class DetectionData:
         return (self.c.y.rows, self.c.y.cols)
 
 
-cdef void _fill_truth_region(box_label* boxes, int count, float* truth, int classes,
-        int num_boxes, int flip, float dx, float dy, float sx, float sy) nogil:
+cdef float* _load_data_detection(float* truths, image orig, box_label* boxes,
+                                 int count, int max_boxes, int num_classes,
+                                 float jitter, float hue, float saturation,
+                                 float exposure) nogil:
+    cdef image sized = make_image(orig.w, orig.h, orig.c)
+    fill_image(sized, .5);
+
+    cdef float dw = jitter * orig.w
+    cdef float dh = jitter * orig.h
+
+    cdef float new_ar = (orig.w + rand_uniform(-dw, dw)) / (orig.h + rand_uniform(-dh, dh));
+    cdef float scale = rand_uniform(.25, 2)
+
+    cdef float nw, nh
+
+    if new_ar < 1:
+        nh = scale * orig.h
+        nw = nh * new_ar
+    else:
+        nw = scale * orig.w
+        nh = nw / new_ar
+
+    cdef float dx = rand_uniform(0, orig.w - nw)
+    cdef float dy = rand_uniform(0, orig.h - nh)
+
+    place_image(orig, <int>nw, <int>nh, <int>dx, <int>dy, sized)
+
+    random_distort_image(sized, hue, saturation, exposure)
+
+    cdef int flip = rand()%2
+    if flip:
+        flip_image(sized)
+
+    _fill_truth_detection(boxes, count, max_boxes, truths, num_classes, flip,
+        -dx/orig.w, -dy/orig.h, nw/orig.w, nh/orig.h)
+    return sized.data
+
+cdef void _fill_truth_detection(box_label* boxes, int count, int num_boxes,
+                                float *truth, int classes, int flip,
+                                float dx, float dy, float sx, float sy) nogil:
     randomize_boxes(boxes, count)
     correct_boxes(boxes, count, dx, dy, sx, sy, flip)
-    cdef float x,y,w,h
-    cdef int id, i, col, row, index
+    if count > num_boxes:
+        count = num_boxes
+    cdef float x, y, w, h
+    cdef int id, i
+
     for i in range(count):
-        x = boxes[i].x
-        y = boxes[i].y
-        w = boxes[i].w
-        h = boxes[i].h
+        x =  boxes[i].x
+        y =  boxes[i].y
+        w =  boxes[i].w
+        h =  boxes[i].h
         id = boxes[i].id
 
-        if (w < .005 or h < .005):
+        if ((w < .001 or h < .001)):
             continue
-        col = <int>(x * num_boxes)
-        row = <int>(y * num_boxes)
 
-        x = x*num_boxes - col
-        y = y*num_boxes - row
+        truth[i*5+0] = x
+        truth[i*5+1] = y
+        truth[i*5+2] = w
+        truth[i*5+3] = h
+        truth[i*5+4] = id
 
-        index = (col+row*num_boxes) * (5*classes)
-        if truth[index]:
-            continue
-        index += 1
-        truth[index] = 1
-        if id < classes:
-            truth[index+id] = 1
-        index += classes
-        index += 1
-        truth[index] = x
-        index += 1
-        truth[index] = y
-        index += 1
-        truth[index] = w
-        index += 1
-        truth[index] = h
- 
 
 cdef class Metadata:
     cdef metadata c
@@ -327,6 +320,10 @@ cdef class Network:
     @property
     def num_boxes(self):
         return num_boxes(self.c)
+    
+    @property
+    def max_boxes(self):
+        return self.c.layers[self.c.n - 1].max_boxes
 
     @property
     def side(self):
@@ -371,7 +368,7 @@ cdef class Network:
     def update(self, images, labels):
         cdef DetectionData data
         data = DetectionData(images, labels,
-                self.width, self.height, self.side, self.num_classes)
+                self.width, self.height, self.max_boxes, self.num_classes)
         cdef float loss = 0.
         assert data.c.X.rows % self.c.batch == 0
         cdef int batch = self.c.batch
@@ -386,7 +383,6 @@ cdef class Network:
         cdef Boxes boxes = Boxes(num)
         cdef float** probs = make_probs(self.c)
         cdef layer L = self.c.layers[self.c.n-1]
-        print('Type', L.type)
         network_detect(self.c, image.c, thresh, hier_thresh, nms, boxes.c, probs)
         res = []
         cdef int j, i
@@ -446,7 +442,6 @@ def train(bytes cfgfile_, bytes weightfile_, bytes train_images_, bytes backup_d
         args.saturation = 1
     if args.aspect == 0:
         args.aspect = 1
-    print('Classes', args.classes, 'num boxes', args.num_boxes)
 
     cdef data train = load_data_detection(args.n, args.paths, args.m, args.w, args.h,
                         args.num_boxes, args.classes, args.jitter,
@@ -461,3 +456,80 @@ def train(bytes cfgfile_, bytes weightfile_, bytes train_images_, bytes backup_d
     #    print(loss)
 
     #    free_data(train)
+
+
+#cdef void _load_data_region(image orig, box_label* boxes, int n) nogil:
+#    oh = orig.h
+#    ow = orig.w
+#
+#    dw = (ow*jitter)
+#    dh = (oh*jitter)
+#
+#    pleft  = rand_uniform(-dw, dw)
+#    pright = rand_uniform(-dw, dw)
+#    ptop   = rand_uniform(-dh, dh)
+#    pbot   = rand_uniform(-dh, dh)
+#
+#    swidth =  ow - pleft - pright
+#    sheight = oh - ptop - pbot
+#
+#    sx = <float>swidth  / ow
+#    sy = <float>sheight / oh
+#
+#    flip = rand() % 2
+#    cropped = crop_image(orig, <int>pleft, <int>ptop, <int>swidth, <int>sheight)
+#
+#    dx = (<float>pleft/ow)/sx
+#    dy = (<float>ptop /oh)/sy
+#    
+#    sized = resize_image(cropped, w, h)
+#    if flip:
+#        flip_image(sized)
+#    random_distort_image(sized, hue, saturation, exposure)
+#
+#    self.c.X.vals[i] = sized.data
+#    _fill_truth_region(py_boxes.c, py_boxes.n, self.c.y.vals[i],
+#                      classes, size, flip, dx, dy, 1./sx, 1./sy)
+#    free_image(cropped)
+#
+#
+#cdef void _fill_truth_region(box_label* boxes, int count, float* truth, int classes,
+#        int num_boxes, int flip, float dx, float dy, float sx, float sy) nogil:
+#    randomize_boxes(boxes, count)
+#    correct_boxes(boxes, count, dx, dy, sx, sy, flip)
+#    cdef float x,y,w,h
+#    cdef int id, i, col, row, index
+#    for i in range(count):
+#        x = boxes[i].x
+#        y = boxes[i].y
+#        w = boxes[i].w
+#        h = boxes[i].h
+#        id = boxes[i].id
+#
+#        if (w < .005 or h < .005):
+#            continue
+#        col = <int>(x * num_boxes)
+#        row = <int>(y * num_boxes)
+#
+#        x = x*num_boxes - col
+#        y = y*num_boxes - row
+#
+#        index = (col+row*num_boxes) * (5*classes)
+#        if truth[index]:
+#            continue
+#        index += 1
+#        truth[index] = 1
+#        if id < classes:
+#            truth[index+id] = 1
+#        index += classes
+#        index += 1
+#        truth[index] = x
+#        index += 1
+#        truth[index] = y
+#        index += 1
+#        truth[index] = w
+#        index += 1
+#        truth[index] = h
+#
+
+

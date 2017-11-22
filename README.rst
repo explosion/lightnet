@@ -26,6 +26,8 @@ detection models, `YOLO and YOLOv2 <https://pjreddie.com/darknet/yolo/>`_.
     :target: https://twitter.com/explosion_ai
     :alt: Explosion AI on Twitter
 
+----
+
 LightNet's features include:
 
 * **State-of-the-art object detection**: YOLOv2 offers unmatched speed/accuracy trade-offs.

@@ -16,6 +16,9 @@ LightNet's features include:
 * **10x faster on CPU**: Uses BLAS for its matrix multiplications routines.
 * **Not named DarkNet**: Avoids some potentially awkward misunderstandings.
 
+.. image:: https://user-images.githubusercontent.com/13643239/33104476-a31678ce-cf28-11e7-993f-872f3234f4b5.png
+    :alt: LightNet "logo"
+
 🌓 Installation
 ===============
 
@@ -270,8 +273,3 @@ Argument       Type          Description
 ``path``       unicode       The path to load from.
 **RETURNS**    ``BoxLabels`` The newly constructed object.
 ============== ============= ===========
-
-----
-
-.. image:: https://user-images.githubusercontent.com/13643239/33104476-a31678ce-cf28-11e7-993f-872f3234f4b5.png
-    :alt: LightNet "logo"

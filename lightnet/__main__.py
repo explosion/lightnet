@@ -7,7 +7,7 @@ from __future__ import print_function
 if __name__ == '__main__':
     import plac
     import sys
-    from lightnet.cli import download
+    from lightnet.cli.download import download
 
     commands = {
         'download': download,

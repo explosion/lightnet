@@ -1,5 +1,5 @@
 __title__ = 'lightnet'
-__version__ = '0.0.6'
+__version__ = '0.0.7'
 __summary__ = "Bringing pjreddie's DarkNet out of the shadows"
 __uri__ = 'https://explosion.ai'
 __author__ = 'Explosion AI'

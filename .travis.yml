@@ -1,0 +1,20 @@
+language: python
+
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+
+install:
+  - pip install -r requirements.txt
+  - pip install -e .
+  - pip install pytest
+
+script:
+  - python -m pytest tests
+
+
+notifications:
+  email: false
+  slack:
+    secure: VSqtxg7u4NTZRfoZqjxPRPVS92KTy/mp62egfDZ9ujTP4VPxNe15QZuTB6r/ICPgEYqBtdhLc/aetuBcemt0bHfentV0F7bz7iDY/AFQC1h1i4G0D0wKMufuqOJFw9MOp2tSpuvCVzhCxR+Ymx/F9SaeYBAiwBawce4wu+qu3lA=

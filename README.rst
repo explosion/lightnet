@@ -118,6 +118,8 @@ Argument    Type        Description
 **RETURNS** ``Network`` The loaded model.
 =========== =========== ===========
 
+----
+
 🌓 Network
 ==========
 
@@ -174,6 +176,8 @@ Argument       Type        Description
 ``box_labels`` list        List of ``BoxLabel`` objects.
 **RETURNS**    float       The loss indicating how much the prediction differed from the provided labels.
 ============== =========== ===========
+
+----
 
 🌓 Image
 ========
@@ -249,6 +253,8 @@ Argument       Type        Description
 ``bytes_data`` bytes       The image contents.
 **RETURNS**    ``Image``   The newly constructed object.
 ============== =========== ===========
+
+----
 
 🌓 BoxLabels
 ============

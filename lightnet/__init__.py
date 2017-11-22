@@ -1,4 +1,4 @@
 from .lightnet import Network, Image, BoxLabels
 
-def load(name):
-    return Network.load(name)
+def load(name, path=None):
+    return Network.load(name, path=path)

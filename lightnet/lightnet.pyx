@@ -387,7 +387,10 @@ cdef class Network:
         if not path.exists():
             raise IOError("Data path not found: %s" % path)
         cfg_path = path / '{name}.cfg'.format(name=name)
-        weights_path = path / '{name}.weights'.format(name=name)
+        if name == 'yolo.2.0':
+            weights_path = path / 'yolo.weights'
+        else:
+            weights_path = path / '{name}.weights'.format(name=name)
         if not cfg_path.exists():
             raise IOError("Config file not found: %s" % cfg_path)
         if not weights_path.exists():

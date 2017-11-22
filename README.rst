@@ -97,7 +97,7 @@ array. If passing in a numpy array, it should be of dtype float32, and shape
     import lightnet
 
     model = lightnet.load('tiny-yolo')
-    image = lightnet.Image.from_bytes(open('eagle.jpg', 'rb'))
+    image = lightnet.Image.from_bytes(open('eagle.jpg', 'rb').read())
     boxes = model(image)
 
 ``METHOD`` lightnet.load

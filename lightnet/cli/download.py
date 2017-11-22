@@ -11,7 +11,6 @@ from pathlib import Path
 
 model_paths = {
     'yolo': 'https://pjreddie.com/media/files/yolo.weights',
-    'yolo2': 'https://pjreddie.com/media/files/yolo.weights',
     'tiny-yolo': 'https://pjreddie.com/media/files/tiny-yolo.weights',
 }
 

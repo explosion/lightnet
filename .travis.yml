@@ -11,6 +11,7 @@ install:
   - pip install cython
   - python setup.py build_ext --inplace
   - pip install -e .
+  - export PYTHONPATH=`pwd`
   - python -m lightnet download tiny-yolo
   - pip install pytest
 

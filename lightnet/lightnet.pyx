@@ -438,6 +438,19 @@ cdef class Network:
         free_ptrs(<void**>probs, num)
         return res
 
+    def to_disk(self, path):
+        cdef bytes loc = path2bytes(path)
+        save_weights(self.c, <char*>loc)
+
+    def from_disk(self, path):
+        raise NotImplementedError
+
+cpdef bytes path2bytes(path):
+    path = Path(path)
+    if not path.exists():
+        raise IOError("Data path not found: %s" % path)
+    return unicode(path.resolve()).encode('utf8')
+
 
 def train(bytes cfgfile_, bytes weightfile_, bytes train_images_, bytes backup_directory_):
     cdef char* cfgfile = cfgfile_

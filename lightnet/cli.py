@@ -27,7 +27,7 @@ def download(cmd, model, direct=False):
     else:
         url = model_paths[model]
         name = model + '.weights'
-    out_loc = Path(__file__).parent.parent / 'data' / name
+    out_loc = Path(__file__).parent / 'data' / name
     download_file(url, out_loc)
 
 

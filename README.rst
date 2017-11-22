@@ -5,6 +5,9 @@ LightNet provides a simple and efficient Python interface to
 `DarkNet <https://github.com/pjreddie/darknet>`_, a neural  network library
 written by Joseph Redmon that's well known for its state-of-the-art object
 detection models, `YOLO and YOLOv2 <https://pjreddie.com/darknet/yolo/>`_.
+LightNet's main purpose for now is to power `Prodigy <https://prodi.gy>`_'s
+upcoming object detection and image segmentation features. However, it may be
+useful to anyone interested in the DarkNet library.
 
 .. image:: https://img.shields.io/travis/explosion/lightnet/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/lightnet

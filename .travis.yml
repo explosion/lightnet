@@ -6,6 +6,7 @@ python:
   - "3.6"
 
 install:
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get install libopenblas-dev 
   - pip install -r requirements.txt
   - pip install cython
   - pip install -e .

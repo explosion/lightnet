@@ -6,6 +6,26 @@ LightNet provides a simple and efficient Python interface to
 written by Joseph Redmon that's well known for its state-of-the-art object
 detection models, `YOLO and YOLOv2 <https://pjreddie.com/darknet/yolo/>`_.
 
+.. image:: https://img.shields.io/travis/explosion/lightnet/master.svg?style=flat-square
+    :target: https://travis-ci.org/explosion/lightnet
+    :alt: Build Status
+
+.. image:: https://img.shields.io/appveyor/ci/explosion/lightnet/master.svg?style=flat-square
+    :target: https://ci.appveyor.com/project/explosion/lightnet
+    :alt: Appveyor Build Status
+
+.. image:: https://img.shields.io/github/release/explosion/lightnet.svg?style=flat-square
+    :target: https://github.com/explosion/lightnet/releases
+    :alt: Current Release Version
+
+.. image:: https://img.shields.io/pypi/v/lightnet.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/lightnet
+    :alt: pypi Version
+
+.. image:: https://img.shields.io/twitter/follow/explosion_ai.svg?style=social&label=Follow
+    :target: https://twitter.com/explosion_ai
+    :alt: Explosion AI on Twitter
+
 LightNet's features include:
 
 * **State-of-the-art object detection**: YOLOv2 offers unmatched speed/accuracy trade-offs.

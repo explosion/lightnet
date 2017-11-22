@@ -3,7 +3,7 @@ LightNet: Bringing pjreddie's DarkNet out of the shadows
 
 LightNet provides a simple and efficient Python interface to
 `DarkNet <https://github.com/pjreddie/darknet>`_, a neural  network library
-written by Joe Redmon that's well known for its state-of-the-art object
+written by Joseph Redmon that's well known for its state-of-the-art object
 detection models, `YOLO and YOLOv2 <https://pjreddie.com/darknet/yolo/>`_.
 
 LightNet's features include:

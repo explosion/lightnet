@@ -80,7 +80,7 @@ setup(
 
     name=about['__title__'],
     zip_safe=False,
-    packages=['lightnet', 'lightnet.cli'],
+    packages=['lightnet'],
     version=about['__version__'],
     author=about['__author__'],
     author_email=about['__email__'],

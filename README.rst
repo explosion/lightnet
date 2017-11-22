@@ -13,10 +13,6 @@ useful to anyone interested in the DarkNet library.
     :target: https://travis-ci.org/explosion/lightnet
     :alt: Build Status
 
-.. image:: https://img.shields.io/appveyor/ci/explosion/lightnet/master.svg?style=flat-square
-    :target: https://ci.appveyor.com/project/explosion/lightnet
-    :alt: Appveyor Build Status
-
 .. image:: https://img.shields.io/github/release/explosion/lightnet.svg?style=flat-square
     :target: https://github.com/explosion/lightnet/releases
     :alt: Current Release Version
@@ -37,7 +33,7 @@ LightNet's features include:
 * **Easy-to-use via Python**: Pass in byte strings, get back numpy arrays with bounding boxes.
 * **Lightweight and self-contained**: No dependency on large frameworks like Tensorflow, PyTorch etc. The DarkNet source is provided in the package.
 * **Easy to install**: Just ``pip install lightnet`` and ``python -m lightnet download yolo``.
-* **Cross-platform**: Works on OSX, Linux and Windows, on Python 2.7, 3.5 and 3.6.
+* **Cross-platform**: Works on OSX and Linux, on Python 2.7, 3.5 and 3.6.
 * **10x faster on CPU**: Uses BLAS for its matrix multiplications routines.
 * **Not named DarkNet**: Avoids some potentially awkward misunderstandings.
 
@@ -48,7 +44,7 @@ LightNet's features include:
 ===============
 
 ==================== ===
-**Operating system** macOS / OS X, Linux, Windows (Cygwin, MinGW, Visual Studio)
+**Operating system** macOS / OS X, Linux (Windows coming soon)
 **Python version**   CPython 2.7, 3.5, 3.6. Only 64 bit.
 **Package managers** pip (source packages only)
 ==================== ===

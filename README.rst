@@ -16,16 +16,6 @@ LightNet's features include:
 * **10x faster on CPU**: Uses BLAS for its matrix multiplications routines.
 * **Not named DarkNet**: Avoids some potentially awkward misunderstandings.
 
-An object detection system predicts labelled bounding boxes on an image. The
-label scheme comes from the training data, so different models will have
-different label sets. YOLOv2 can detect objects in images of any resolution.
-Smaller images will be faster to predict, while high resolution images will
-give you better object detection accuracy.
-
-Images can be loaded by file-path, by JPEG-encoded byte-string, or by numpy
-array. If passing in a numpy array, it should be of dtype float32, and shape
-``(width, height, colors)``.
-
 Installation
 ============
 
@@ -63,6 +53,16 @@ __ https://pjreddie.com/media/files/tiny-yolo.weights
 
 Usage
 =====
+
+An object detection system predicts labelled bounding boxes on an image. The
+label scheme comes from the training data, so different models will have
+different label sets. YOLOv2 can detect objects in images of any resolution.
+Smaller images will be faster to predict, while high resolution images will
+give you better object detection accuracy.
+
+Images can be loaded by file-path, by JPEG-encoded byte-string, or by numpy
+array. If passing in a numpy array, it should be of dtype float32, and shape
+``(width, height, colors)``.
 
 .. code:: python
 

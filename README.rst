@@ -16,8 +16,8 @@ LightNet's features include:
 * **10x faster on CPU**: Uses BLAS for its matrix multiplications routines.
 * **Not named DarkNet**: Avoids some potentially awkward misunderstandings.
 
-Installation
-============
+🌓 Installation
+===============
 
 ==================== ===
 **Operating system** macOS / OS X, Linux, Windows (Cygwin, MinGW, Visual Studio)
@@ -51,8 +51,8 @@ The following models are currently available via the ``download`` command:
 __ https://pjreddie.com/media/files/yolo.weights
 __ https://pjreddie.com/media/files/tiny-yolo.weights
 
-Usage
-=====
+🌓 Usage
+========
 
 An object detection system predicts labelled bounding boxes on an image. The
 label scheme comes from the training data, so different models will have
@@ -93,8 +93,8 @@ Argument    Type        Description
 **RETURNS** ``Network`` The loaded model.
 =========== =========== ===========
 
-Network
-=======
+🌓 Network
+==========
 
 The neural network object. Wraps DarkNet's ``network`` struct.
 
@@ -150,8 +150,8 @@ Argument       Type        Description
 **RETURNS**    float       The loss indicating how much the prediction differed from the provided labels.
 ============== =========== ===========
 
-Image
-=====
+🌓 Image
+========
 
 Data container for a single image. Wraps DarkNet's ``image`` struct.
 
@@ -225,8 +225,8 @@ Argument       Type        Description
 **RETURNS**    ``Image``   The newly constructed object.
 ============== =========== ===========
 
-BoxLabels
-=========
+🌓 BoxLabels
+============
 
 Data container for labelled bounding boxes for a single image. Wraps an array
 of DarkNet's ``box_label`` struct.

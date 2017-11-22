@@ -16,11 +16,10 @@ model_paths = {
 
 @plac.annotations(
     model=("model to download, shortcut or name)", "positional", None, str),
-    direct=("force direct download. Needs model name with version and won't "
-            "perform compatibility check", "flag", "d", bool))
+    direct=("force direct download from URL", "flag", "d", bool))
 def download(cmd, model, direct=False):
     """
-    Download model from default download path. Models: tiny-yolo, yolo, yolo2
+    Download model from default download path. Models: tiny-yolo, yolo.
     """
     if direct:
         url = model

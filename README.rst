@@ -6,6 +6,28 @@ LightNet provides a simple and efficient Python interface to
 written by Joseph Redmon that's well known for its state-of-the-art object
 detection models, `YOLO and YOLOv2 <https://pjreddie.com/darknet/yolo/>`_.
 
+.. image:: https://img.shields.io/travis/explosion/lightnet/master.svg?style=flat-square
+    :target: https://travis-ci.org/explosion/lightnet
+    :alt: Build Status
+
+.. image:: https://img.shields.io/appveyor/ci/explosion/lightnet/master.svg?style=flat-square
+    :target: https://ci.appveyor.com/project/explosion/lightnet
+    :alt: Appveyor Build Status
+
+.. image:: https://img.shields.io/github/release/explosion/lightnet.svg?style=flat-square
+    :target: https://github.com/explosion/lightnet/releases
+    :alt: Current Release Version
+
+.. image:: https://img.shields.io/pypi/v/lightnet.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/lightnet
+    :alt: pypi Version
+
+.. image:: https://img.shields.io/twitter/follow/explosion_ai.svg?style=social&label=Follow
+    :target: https://twitter.com/explosion_ai
+    :alt: Explosion AI on Twitter
+
+----
+
 LightNet's features include:
 
 * **State-of-the-art object detection**: YOLOv2 offers unmatched speed/accuracy trade-offs.
@@ -15,6 +37,9 @@ LightNet's features include:
 * **Cross-platform**: Works on OSX, Linux and Windows, on Python 2.7, 3.5 and 3.6.
 * **10x faster on CPU**: Uses BLAS for its matrix multiplications routines.
 * **Not named DarkNet**: Avoids some potentially awkward misunderstandings.
+
+.. image:: https://user-images.githubusercontent.com/13643239/33104476-a31678ce-cf28-11e7-993f-872f3234f4b5.png
+    :alt: LightNet "logo"
 
 🌓 Installation
 ===============
@@ -93,6 +118,8 @@ Argument    Type        Description
 **RETURNS** ``Network`` The loaded model.
 =========== =========== ===========
 
+----
+
 🌓 Network
 ==========
 
@@ -149,6 +176,8 @@ Argument       Type        Description
 ``box_labels`` list        List of ``BoxLabel`` objects.
 **RETURNS**    float       The loss indicating how much the prediction differed from the provided labels.
 ============== =========== ===========
+
+----
 
 🌓 Image
 ========
@@ -225,6 +254,8 @@ Argument       Type        Description
 **RETURNS**    ``Image``   The newly constructed object.
 ============== =========== ===========
 
+----
+
 🌓 BoxLabels
 ============
 
@@ -270,8 +301,3 @@ Argument       Type          Description
 ``path``       unicode       The path to load from.
 **RETURNS**    ``BoxLabels`` The newly constructed object.
 ============== ============= ===========
-
-----
-
-.. image:: https://user-images.githubusercontent.com/13643239/33104476-a31678ce-cf28-11e7-993f-872f3234f4b5.png
-    :alt: LightNet "logo"

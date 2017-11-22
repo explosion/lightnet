@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 import shutil
+import io
 import os
-import os.path
 import json
 import distutils.command.build_ext
 import subprocess
 import sys
 from setuptools import Extension, setup
 import platform
-
 import numpy
 
 try:
@@ -41,7 +40,7 @@ class ExtensionBuilder(distutils.command.build_ext.build_ext):
                 e.extra_link_args.append('-lopenblas')
                 e.extra_link_args.append('-L/opt/OpenBLAS/lib')
         distutils.command.build_ext.build_ext.build_extensions(self)
-    
+
 
 def get_c_sources(start_dir):
     c_sources = []
@@ -62,6 +61,13 @@ INCLUDE = os.path.join(PWD, 'lightnet', '_darknet')
 
 c_files = get_c_sources(os.path.join(PWD, 'lightnet', '_darknet'))
 
+with io.open(os.path.join(PWD, 'lightnet', 'about.py'), encoding='utf8') as f:
+    about = {}
+    exec(f.read(), about)
+
+with io.open(os.path.join(PWD, 'README.rst'), encoding='utf8') as f:
+    readme = f.read()
+
 setup(
     setup_requires=['numpy'],
     install_requires=['numpy', 'plac', 'requests', 'pathlib', 'tqdm'],
@@ -72,12 +78,16 @@ setup(
     package_data={'': ['*.json', '*.pyx', '*.pxd', '_darknet/*.h',
                        'data/*.cfg', 'data/*.template', 'data/*.names'] + c_files},
 
-    name="lightnet",
+    name=about['__title__'],
+    zip_safe=False,
     packages=['lightnet', 'lightnet.cli'],
-    version="0.0.7",
-    author="Matthew Honnibal",
-    author_email="matt@explosion.ai",
-    summary="pjreddie's DarkNet library, brought into the light",
+    version=about['__version__'],
+    author=about['__author__'],
+    author_email=about['__email__'],
+    url=about['__uri__'],
+    license=about['__license__'],
+    description=about['__summary__'],
+    long_description=readme,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',

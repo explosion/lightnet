@@ -4,11 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef PTHREAD
-    #include <pthread.h>
-//#else
-//    typedef int pthread_t
-#endif
+#include <pthread.h>
 
 #define SECRET_NUM -1234
 extern int gpu_index;

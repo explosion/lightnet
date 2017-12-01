@@ -207,7 +207,7 @@ cdef class DetectionData:
         self.c.shallow = 0
         cdef int n = len(images)
         self.c.X.rows = n
-        self.c.X.vals = <float**>calloc(self.c.X.rows, sizeof(float*))
+        self.c.X.vals = <float**>calloc(sizeof(float*), self.c.X.rows)
         self.c.X.cols = h*w*3
         self.c.y = make_matrix(n, 5 * max_boxes)
 
@@ -336,8 +336,10 @@ cdef class Metadata:
         self.c = get_metadata(<char*>loc)
 
     def __dealloc__(self):
-        free_ptrs(<void**>self.c.names, self.c.classes)
-        shutil.rmtree(self.backup_dir)
+        if self.c.names != NULL:
+            free_ptrs(<void**>self.c.names, self.c.classes)
+            self.c.names = NULL
+            shutil.rmtree(self.backup_dir)
 
 
 cdef class Network:
@@ -408,15 +410,24 @@ cdef class Network:
         return self._detect(image, thresh, hier_thresh, nms)
 
     def update(self, images, labels):
+        assert len(images) != 0
+        assert len(labels) == len(images)
         cdef DetectionData data
         data = DetectionData(images, labels,
                 self.width, self.height, self.max_boxes, self.num_classes)
         cdef float loss = 0.
-        assert data.c.X.rows % self.c.batch == 0
-        cdef int batch = self.c.batch
-        cdef int n = data.c.X.rows / batch
-
-        loss = train_network(self.c, data.c)
+        cdef int prev_batch_size = self.c.batch
+        set_batch_network(self.c, data.c.X.rows)
+        resize_network(self.c, self.c.w, self.c.h)
+        self.c.train = 1
+        get_next_batch(data.c, self.c.batch, 0, self.c.input, self.c.truth)
+        forward_network(self.c)
+        backward_network(self.c)
+        loss += self.c.cost[0]
+        update_network(self.c)
+        self.c.train = 0
+        set_batch_network(self.c, prev_batch_size)
+        resize_network(self.c, self.c.w, self.c.h)
         return loss
 
     def _detect(self, Image image,
@@ -424,7 +435,6 @@ cdef class Network:
         num = num_boxes(self.c)
         cdef Boxes boxes = Boxes(num)
         cdef float** probs = make_probs(self.c)
-        cdef layer L = self.c.layers[self.c.n-1]
         network_detect(self.c, image.c, thresh, hier_thresh, nms, boxes.c, probs)
         res = []
         cdef int j, i

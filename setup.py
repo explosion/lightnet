@@ -32,12 +32,13 @@ class ExtensionBuilder(distutils.command.build_ext.build_ext):
             e.include_dirs.append(os.path.abspath(include_dir)),
             e.undef_macros.append("FORTIFY_SOURCE")
             e.extra_compile_args.append("-DCBLAS")
+            e.extra_compile_args.append('-g')
+            e.extra_link_args.append('-g')
             if sys.platform == 'darwin':
                 e.extra_compile_args.append('-D__APPLE__')
                 e.extra_link_args.append('-lblas')
             else:
-                e.extra_link_args.append('-lopenblas')
-                e.extra_link_args.append('-L/opt/OpenBLAS/lib')
+                e.extra_link_args.append('-lblas')
         distutils.command.build_ext.build_ext.build_extensions(self)
 
 

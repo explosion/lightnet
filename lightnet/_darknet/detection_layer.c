@@ -225,6 +225,7 @@ void backward_detection_layer(const detection_layer l, network net)
 void get_detection_boxes(layer l, int w, int h, float thresh, float **probs, box *boxes, int only_objectness)
 {
     int i,j,n;
+    // Length: side * side * clases + (n*n) + n
     float *predictions = l.output;
     //int per_cell = 5*num+classes;
     for (i = 0; i < l.side*l.side; ++i){

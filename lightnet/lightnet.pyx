@@ -8,6 +8,7 @@ import shutil
 import tempfile
 import numpy
 from pathlib import Path
+import json
 
 
 try:
@@ -344,7 +345,8 @@ cdef class Metadata:
 
 cdef class Network:
     cdef network* c
-    cdef Metadata meta
+    cdef public object cfg
+    cdef readonly object names
 
     def __init__(self):
         self.c = NULL
@@ -357,7 +359,7 @@ cdef class Network:
     @property
     def num_classes(self):
         return self.c.layers[self.c.n-1].classes
-
+    
     @property
     def num_boxes(self):
         return num_boxes(self.c)
@@ -378,11 +380,8 @@ cdef class Network:
     def height(self):
         return network_height(self.c)
 
-    def load_meta(self, path):
-        self.meta = Metadata(path)
-
     @classmethod
-    def load(cls, name, *, path=None, int clear=0):
+    def load(cls, name, *, path=None, names=None, int clear=0):
         if path is None:
             path = Path(__file__).parent / 'data'
         path = Path(path)
@@ -402,7 +401,8 @@ cdef class Network:
         cdef bytes weights = unicode(weights_path.resolve()).encode('utf8')
         self.c = load_network(<char*>cfg, <char*>weights, clear)
         # TODO: Fix this hard-coding...
-        self.load_meta(path / 'coco.template')
+        with (path / 'coco.names').open('r', encoding='utf8') as file_:
+            self.names = file_.read().split()
         return self
 
     def __call__(self, Image image, 
@@ -439,9 +439,9 @@ cdef class Network:
         res = []
         cdef int j, i
         for j in range(num):
-            for i in range(self.meta.c.classes):
+            for i in range(len(self.names)):
                 if probs[j][i] > 0:
-                    res.append((i, self.meta.c.names[i], probs[j][i],
+                    res.append((i, self.names[i], probs[j][i],
                                (boxes.c[j].x, boxes.c[j].y,
                                 boxes.c[j].w, boxes.c[j].h)))
         res = sorted(res, key=lambda x: -x[2])
@@ -449,11 +449,32 @@ cdef class Network:
         return res
 
     def to_disk(self, path):
-        cdef bytes loc = path2bytes(path)
-        save_weights(self.c, <char*>loc)
+        path = Path(path)
+        cdef bytes weights_loc = path2bytes(path / 'weights')
+        save_weights(self.c, <char*>weights_loc)
+        with (path / 'cfg').open('w', encoding='utf8') as file_:
+            file_.write(self.cfg)
+        with (path / 'names').open('w', encoding='utf8') as file_:
+            file_.write('\n'.join(self.names))
 
     def from_disk(self, path):
-        raise NotImplementedError
+        path = Path(path)
+        if not path.exists():
+            raise IOError("Model path not found: %s" % path)
+        if not path.is_dir():
+            raise IOError("Model path not directory: %s" % path)
+        if not (path / 'weights').exists():
+            raise IOError("Weights path not found: %s" % (path/'weights'))
+        if not (path / 'cfg').exists():
+            raise IOError("Config path not found: %s" % (path/'cfg'))
+        cdef bytes weights_loc = path2bytes(path / 'weights')
+        cdef bytes cfg_loc = path2bytes(path / 'cfg')
+        self.c = load_network(cfg_loc, weights_loc, 0)
+        self.cfg = (path / 'cfg').open('r', encoding='utf8').read()
+        with (path / 'names').open('r', encoding='utf8') as file_:
+            self.names = file_.read().split()
+        return self
+
 
 cpdef bytes path2bytes(path):
     path = Path(path)

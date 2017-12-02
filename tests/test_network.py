@@ -30,6 +30,15 @@ def test_from_disk(image):
     results = net(image)
     assert results is not None
 
+def test_to_from_bytes(image):
+    net = Network().from_disk(Path('lightnet/data/yolo').resolve())
+    data = net.to_bytes()
+    results = net(image)
+    loaded = Network().from_bytes(data)
+    results2 = net(image)
+    assert results == results2
+
+
 def test_detect(image):
     net = Network.load("tiny-yolo")
     result = net(image)

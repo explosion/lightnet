@@ -2,3 +2,4 @@ pathlib
 numpy
 plac
 requests
+msgpack-python

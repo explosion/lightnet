@@ -70,7 +70,8 @@ with io.open(os.path.join(PWD, 'README.rst'), encoding='utf8') as f:
 
 setup(
     setup_requires=['numpy'],
-    install_requires=['numpy', 'plac', 'requests', 'pathlib', 'tqdm'],
+    install_requires=['numpy', 'plac', 'requests', 'pathlib', 'tqdm',
+                      'msgpack-python'],
     ext_modules=[
         Extension('lightnet.lightnet', ['lightnet/lightnet.c']),
     ],

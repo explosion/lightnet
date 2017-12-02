@@ -25,6 +25,11 @@ def test_init():
 def test_load():
     net = Network.load("tiny-yolo")
 
+def test_from_disk(image):
+    net = Network().from_disk(Path('lightnet/data/yolo').resolve())
+    results = net(image)
+    assert results is not None
+
 def test_detect(image):
     net = Network.load("tiny-yolo")
     result = net(image)

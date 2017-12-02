@@ -9,6 +9,9 @@ import tempfile
 import numpy
 from pathlib import Path
 import json
+import msgpack
+
+from .util import make_temp_dir
 
 
 try:
@@ -447,10 +450,38 @@ cdef class Network:
         res = sorted(res, key=lambda x: -x[2])
         free_ptrs(<void**>probs, num)
         return res
+    
+    def to_bytes(self):
+        with make_temp_dir() as temp_dir:
+            self.to_disk(temp_dir)
+            temp_dir = Path(temp_dir)
+            msg = {}
+            with (temp_dir / 'weights').open('rb') as file_:
+                msg[b'weights'] = file_.read()
+            with (temp_dir / 'cfg').open('rb') as file_:
+                msg[b'cfg'] = file_.read()
+            with (temp_dir / 'names').open('rb') as file_:
+                msg[b'names'] = file_.read()
+        print(msg.keys())
+        return msgpack.dumps(msg)
+
+    def from_bytes(self, b):
+        msg = msgpack.loads(b)
+        print(msg.keys())
+        with make_temp_dir() as temp_dir:
+            temp_dir = Path(temp_dir)
+            with (temp_dir / 'weights').open('wb') as file_:
+                file_.write(msg[b'weights'])
+            with (temp_dir / 'cfg').open('wb') as file_:
+                file_.write(msg[b'cfg'])
+            with (temp_dir / 'names').open('wb') as file_:
+                file_.write(msg[b'names'])
+            self.from_disk(temp_dir)
+        return self
 
     def to_disk(self, path):
         path = Path(path)
-        cdef bytes weights_loc = path2bytes(path / 'weights')
+        cdef bytes weights_loc = unicode(path / 'weights').encode('utf8')
         save_weights(self.c, <char*>weights_loc)
         with (path / 'cfg').open('w', encoding='utf8') as file_:
             file_.write(self.cfg)

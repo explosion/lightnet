@@ -569,6 +569,7 @@ matrix network_predict_data(network *net, data test)
     int k = net->outputs;
     matrix pred = make_matrix(test.X.rows, k);
     float *X = calloc(net->batch*test.X.cols, sizeof(float));
+    //printf("Batch %d rows %d\n", net->batch, test.X.rows);
     for(i = 0; i < test.X.rows; i += net->batch){
         for(b = 0; b < net->batch; ++b){
             if(i+b == test.X.rows) break;
@@ -579,6 +580,7 @@ matrix network_predict_data(network *net, data test)
             if(i+b == test.X.rows) break;
             for(j = 0; j < k; ++j){
                 pred.vals[i+b][j] = out[j+b*k];
+                //printf("predict %f\n", pred.vals[i+b][j]);
             }
         }
     }

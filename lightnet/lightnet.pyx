@@ -158,6 +158,21 @@ cdef class BoxLabels:
             self.c[i].top = self.c[i].y - self.c[i].h/2
             self.c[i].bottom = self.c[i].y + self.c[i].h/2
 
+    def __len__(self):
+        return self.n
+
+    @classmethod
+    def from_results(cls, results):
+        ids = numpy.zeros((len(results),), dtype='i')
+        boxes = numpy.zeros((len(results), 4), dtype='f')
+        for j in range(len(results)):
+            ids[j] = results[j][0]
+            boxes[j, 0] = results[j][3][0]
+            boxes[j, 1] = results[j][3][1]
+            boxes[j, 2] = results[j][3][2]
+            boxes[j, 3] = results[j][3][3]
+        return cls(ids, boxes)
+
     @classmethod
     def load(cls, path):
         cdef bytes loc = unicode(Path(path).resolve()).encode('utf8')
@@ -480,16 +495,7 @@ cdef class Network:
         for i, image in enumerate(images):
             raw_guesses = self._detect(image, thresh=thresh,
                                        hier_thresh=hier_thresh, nms=nms)
-            ids = numpy.zeros((len(raw_guesses),), dtype='i')
-            boxes = numpy.zeros((len(raw_guesses), 4), dtype='f')
-            for j in range(len(raw_guesses)):
-                ids[j] = raw_guesses[j][0]
-                boxes[j, 0] = raw_guesses[j][3]
-                boxes[j, 1] = raw_guesses[j][4]
-                boxes[j, 2] = raw_guesses[j][5]
-                boxes[j, 3] = raw_guesses[j][6]
-
-            guesses = BoxLabels(ids, boxes)
+            guesses = BoxLabels.from_results(raw_guesses)
             scores['tp'] += len(labels[i].intersection(guesses))
             scores['fn'] += len(labels[i].difference(guesses))
             scores['fp'] += len(guesses.difference(labels[i]))

@@ -463,12 +463,10 @@ cdef class Network:
                 msg[b'cfg'] = file_.read()
             with (temp_dir / 'names').open('rb') as file_:
                 msg[b'names'] = file_.read()
-        print(msg.keys())
         return msgpack.dumps(msg)
 
     def from_bytes(self, b):
         msg = msgpack.loads(b)
-        print(msg.keys())
         with make_temp_dir() as temp_dir:
             temp_dir = Path(temp_dir)
             with (temp_dir / 'weights').open('wb') as file_:

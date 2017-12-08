@@ -59,3 +59,14 @@ def test_update(image, box_labels):
     for i in range(10):
         loss = net.update([image], [box_labels])
         print(loss)
+
+
+def test_evaluate(image, box_labels):
+    net = Network.load("tiny-yolo")
+    acc = net.evaluate([image], [box_labels])
+    assert 'fp' in acc
+    assert 'fn' in acc
+    assert 'tp' in acc
+    assert 'r' in acc
+    assert 'p' in acc
+    assert 'f' in acc

@@ -402,6 +402,7 @@ cdef class Network:
         cdef Network self = Network.__new__(cls)
         cdef bytes cfg = unicode(cfg_path.resolve()).encode('utf8')
         cdef bytes weights = unicode(weights_path.resolve()).encode('utf8')
+        self.cfg = cfg
         self.c = load_network(<char*>cfg, <char*>weights, clear)
         # TODO: Fix this hard-coding...
         with (path / 'coco.names').open('r', encoding='utf8') as file_:
@@ -483,7 +484,7 @@ cdef class Network:
         path = Path(path)
         cdef bytes weights_loc = unicode(path / 'weights').encode('utf8')
         save_weights(self.c, <char*>weights_loc)
-        with (path / 'cfg').open('w', encoding='utf8') as file_:
+        with (path / 'cfg').open('wb') as file_:
             file_.write(self.cfg)
         with (path / 'names').open('w', encoding='utf8') as file_:
             file_.write('\n'.join(self.names))
@@ -501,7 +502,7 @@ cdef class Network:
         cdef bytes weights_loc = path2bytes(path / 'weights')
         cdef bytes cfg_loc = path2bytes(path / 'cfg')
         self.c = load_network(cfg_loc, weights_loc, 0)
-        self.cfg = (path / 'cfg').open('r', encoding='utf8').read()
+        self.cfg = (path / 'cfg').open('rb').read()
         with (path / 'names').open('r', encoding='utf8') as file_:
             self.names = file_.read().split()
         return self

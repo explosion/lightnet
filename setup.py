@@ -38,7 +38,7 @@ class ExtensionBuilder(distutils.command.build_ext.build_ext):
                 e.extra_compile_args.append('-D__APPLE__')
                 e.extra_link_args.append('-lblas')
             else:
-                e.extra_link_args.append('-lblas')
+                e.extra_link_args.append('-lopenblas')
         distutils.command.build_ext.build_ext.build_extensions(self)
 
 

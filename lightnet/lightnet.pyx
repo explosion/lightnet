@@ -202,6 +202,45 @@ cdef class BoxLabels:
     def bottom(self):
         return [self.c[i].bottom for i in range(self.n)]
 
+    def has_box(self, target):
+        cdef box target_box
+        target_box.x = target['x']
+        target_box.y = target['y']
+        target_box.w = target['w']
+        target_box.h = target['h']
+        cdef int target_id = target['id']
+        cdef box_label lbox
+        cdef box gbox
+        for lbox in self.c[:self.n]:
+            if lbox.id == target_id:
+                gbox.x = lbox.x
+                gbox.y = lbox.y
+                gbox.w = lbox.w
+                gbox.h = lbox.h
+                iou = box_iou(gbox, target_box)
+                if iou >= 0.5:
+                    return 1
+        else:
+            return 0
+
+    def intersection(self, BoxLabels other):
+        output = []
+        cdef box_label b
+        for b in self.c[:self.n]:
+            target = {'id': b.id, 'y': b.y, 'x': b.x, 'w': b.w, 'h': b.h}
+            if other.has_box(target):
+                output.append(target)
+        return output
+    
+    def difference(self, BoxLabels other):
+        output = []
+        cdef box_label b
+        for b in self.c[:self.n]:
+            target = {'id': b.id, 'y': b.y, 'x': b.x, 'w': b.w, 'h': b.h}
+            if not other.has_box(target):
+                output.append(target)
+        return output
+
 
 cdef class DetectionData:
     cdef data c
@@ -434,6 +473,33 @@ cdef class Network:
         resize_network(self.c, self.c.w, self.c.h)
         return loss
 
+    def evaluate(self, images, labels,
+            float thresh=.5, float hier_thresh=.5, float nms=.45):
+        cdef Image image
+        scores = {'tp': 0., 'fn': 0., 'fp': 0.}
+        for i, image in enumerate(images):
+            raw_guesses = self._detect(image, thresh=thresh,
+                                       hier_thresh=hier_thresh, nms=nms)
+            ids = numpy.zeros((len(raw_guesses),), dtype='i')
+            boxes = numpy.zeros((len(raw_guesses), 4), dtype='f')
+            for j in range(len(raw_guesses)):
+                ids[j] = raw_guesses[j][0]
+                boxes[j, 0] = raw_guesses[j][3]
+                boxes[j, 1] = raw_guesses[j][4]
+                boxes[j, 2] = raw_guesses[j][5]
+                boxes[j, 3] = raw_guesses[j][6]
+
+            guesses = BoxLabels(ids, boxes)
+            scores['tp'] += len(labels[i].intersection(guesses))
+            scores['fn'] += len(labels[i].difference(guesses))
+            scores['fp'] += len(guesses.difference(labels[i]))
+        scores['p'] = scores['tp'] / (scores['tp'] + scores['fp'] + 1e-12)
+        scores['r'] = scores['tp'] / (scores['tp'] + scores['fn'] + 1e-12)
+        p = scores['p']
+        r = scores['r']
+        scores['f'] =  2 * ((p * r) / (p + r + 1e-12))
+        return scores
+
     def _detect(self, Image image,
             float thresh=.5, float hier_thresh=.5, float nms=.45):
         num = num_boxes(self.c)
@@ -444,14 +510,14 @@ cdef class Network:
         cdef int j, i
         for j in range(num):
             for i in range(len(self.names)):
-                if probs[j][i] > 0:
+                if probs[j][i] > thresh:
                     res.append((i, self.names[i], probs[j][i],
                                (boxes.c[j].x, boxes.c[j].y,
                                 boxes.c[j].w, boxes.c[j].h)))
         res = sorted(res, key=lambda x: -x[2])
         free_ptrs(<void**>probs, num)
         return res
-    
+
     def to_bytes(self):
         with make_temp_dir() as temp_dir:
             self.to_disk(temp_dir)

@@ -460,7 +460,7 @@ cdef class Network:
         self.c = load_network(<char*>cfg, <char*>weights, clear)
         # TODO: Fix this hard-coding...
         with (path / 'coco.names').open('r', encoding='utf8') as file_:
-            self.names = file_.read().split()
+            self.names = file_.read().strip().split('\n')
         return self
 
     def __call__(self, Image image, 
@@ -516,7 +516,7 @@ cdef class Network:
         cdef int j, i
         for j in range(num):
             for i in range(len(self.names)):
-                if probs[j][i] > thresh:
+                if probs[j][i] > 0.:
                     res.append((i, self.names[i], probs[j][i],
                                (boxes.c[j].x, boxes.c[j].y,
                                 boxes.c[j].w, boxes.c[j].h)))
@@ -574,7 +574,7 @@ cdef class Network:
         self.c = load_network(cfg_loc, weights_loc, 0)
         self.cfg = (path / 'cfg').open('rb').read()
         with (path / 'names').open('r', encoding='utf8') as file_:
-            self.names = file_.read().split()
+            self.names = file_.read().strip().split('\n')
         return self
 
 

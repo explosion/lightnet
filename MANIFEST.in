@@ -1,7 +1,9 @@
 include LICENSE
 include README.rst
 include bin/cythonize.py
+include lightnet/_darknet/Makefile
 recursive-include lightnet/_darknet *.c
+recursive-include lightnet/_darknet *.cu
 recursive-include lightnet/_darknet *.h
 recursive-include lightnet/data *.cfg
 recursive-include lightnet/data *.data

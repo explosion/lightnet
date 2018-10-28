@@ -49,6 +49,12 @@ LightNet's features include:
 **Package managers** pip (source packages only)
 ==================== ===
 
+LightNet requires an installation of `OpenBLAS <https://www.openblas.net/>`_:
+
+.. code:: bash
+
+    sudo apt-get install libopenblas-dev
+
 LightNet can be installed via pip:
 
 .. code:: bash

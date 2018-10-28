@@ -22,18 +22,51 @@ class ExtensionBuilder(distutils.command.build_ext.build_ext):
         if use_cython:
             subprocess.check_call([sys.executable, 'bin/cythonize.py'],
                                    env=os.environ)
-        extensions = []
-        e = self.extensions.pop(0)
-        c_sources = get_c_sources(os.path.join(PWD, 'lightnet', '_darknet'))
-        include_dir = os.path.join(PWD, 'lightnet', '_darknet')
-        self.extensions.append(Extension(e.name, e.sources + c_sources))
+
+        cuda_include_dir = '/usr/local/cuda/include/'
+        if 'CUDA_INCLUDE_DIR' in os.environ:
+            cuda_include_dir = os.environ['CUDA_INCLUDE_DIR']
+
+        cuda_library_dir = '/usr/local/cuda/lib64/'
+        if 'CUDA_LIBRARY_DIR' in os.environ:
+            cuda_library_dir = os.environ['CUDA_LIBRARY_DIR']
+
+        use_gpu = False
+        if 'GPU' in os.environ and os.environ['GPU'] == '1':
+            use_gpu = True
+
+        use_cudnn = False
+        if 'CUDNN' in os.environ and os.environ['CUDNN'] == '1':
+            use_gpu = True
+            use_cudnn = True
+
+        make_command = ['make']
+        if use_gpu:
+            make_command.append('GPU=1')
+        if use_cudnn:
+            make_command.append('CUDNN=1')
+
+        darknet_dir = os.path.join(PWD, 'lightnet', '_darknet')
+        subprocess.check_call(make_command, cwd=darknet_dir)
+
         for e in self.extensions:
             e.include_dirs.append(numpy.get_include())
-            e.include_dirs.append(os.path.abspath(include_dir)),
             e.undef_macros.append("FORTIFY_SOURCE")
             e.extra_compile_args.append("-DCBLAS")
             e.extra_compile_args.append('-g')
+            e.library_dirs.append(darknet_dir)
             e.extra_link_args.append('-g')
+            e.extra_link_args.append('-ldarknet')
+            if use_gpu:
+                e.include_dirs.append(cuda_include_dir)
+                e.library_dirs.append(cuda_library_dir)
+                e.extra_link_args.append('-lcuda')
+                e.extra_link_args.append('-lcudart')
+                e.extra_link_args.append('-lcublas')
+                e.extra_link_args.append('-lcurand')
+                e.extra_link_args.append('-lstdc++')
+            if use_cudnn:
+                e.extra_link_args.append('-lcudnn')
             if sys.platform == 'darwin':
                 e.extra_compile_args.append('-D__APPLE__')
                 e.extra_link_args.append('-lblas')
